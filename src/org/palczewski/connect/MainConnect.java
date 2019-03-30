@@ -9,4 +9,16 @@ other applications.
 public class MainConnect {
 
     Connection conn;
+
+    MainConnect() {
+        // Creates an instance
+    }
+
+    public Connection doConnect(String user, String pw) {
+        /*
+        Creates and returns a connection object to the calling app.
+         */
+
+
+    }
 }
