@@ -14,12 +14,9 @@ public class MainConnect {
     private String pw;
 
     private static final String url =
-            "jdbc:mysql://localhost:3306/4" +
-                    "?verifyServerCertificate" +
-                    "=false" +
-                    "&useSSL=true";
+            "jdbc:mysql://localhost:3306/?verifyServerCertificate=false&useSSL=true";
 
-    MainConnect() {
+    public MainConnect() {
         // Creates an instance
     }
 
@@ -37,9 +34,9 @@ public class MainConnect {
             System.out.println("Connected to server.");
 
         } catch (ClassNotFoundException e) {
-            System.out.println("Class Not Found.");
+            System.out.println("Class Not Found: " + e.getMessage());
         } catch (SQLException e) {
-            System.out.println("Error connecting to database.");
+            System.out.println("Error connecting to mySQL server: " + e.getMessage());
         }
         return conn;
     }
