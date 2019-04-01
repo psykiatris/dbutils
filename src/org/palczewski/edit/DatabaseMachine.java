@@ -3,6 +3,7 @@ package org.palczewski.edit;
 import org.palczewski.connect.MainConnect;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -60,6 +61,30 @@ public class DatabaseMachine {
 
         } else {
             System.out.println("No connection to server.");
+        }
+    }
+
+    public void viewDatabase() {
+        if(conn != null) {
+            try {
+                stmt = conn.createStatement();
+                String list = "show databases";
+                try (ResultSet rs = stmt.executeQuery(list)) {
+                    System.out.println("List of databases on mySQL:");
+                    int i = 1;
+                    while (rs.next()) {
+                        System.out.println(i + ": " + rs.getString(1));
+                        i++;
+                    }
+                }
+                conn.close();
+
+            } catch (SQLException e) {
+                System.out.println("Error processing statement" + e.getMessage());
+            }
+
+        } else {
+            System.out.println("Not connected to mySQL");
         }
     }
 }
