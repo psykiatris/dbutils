@@ -8,7 +8,7 @@ other applications.
  */
 public class MainConnect {
 
-    private static Connection conn;
+    static Connection conn;
     private static Statement stmt;
     private String user;
     private String pw;
@@ -39,6 +39,7 @@ public class MainConnect {
             System.out.println("Error connecting to mySQL server: " + e.getMessage());
         }
         return conn;
+
     }
 
     public final boolean isOpen() {
@@ -48,4 +49,5 @@ public class MainConnect {
     public final String toString() {
         return "This class manaages connecting to database server.";
     }
+
 }
