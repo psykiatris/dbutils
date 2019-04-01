@@ -18,7 +18,6 @@ Will be used by application at initialization.
 public class DatabaseMachine {
     String dbName; // Name of database
     Connection conn;
-    MainConnect mc;
     Statement stmt;
 
     public DatabaseMachine(Connection conn) {
@@ -46,5 +45,21 @@ public class DatabaseMachine {
             System.out.println("no connection to server");
         }
 
+    }
+
+    public void removeDatabase(String dbName) {
+        if(conn != null) {
+
+        } else {
+            System.out.println("No connection to server.");
+        }
+    }
+
+    public void switchDatabase(String dbName) {
+        if(conn != null) {
+
+        } else {
+            System.out.println("No connection to server.");
+        }
     }
 }
