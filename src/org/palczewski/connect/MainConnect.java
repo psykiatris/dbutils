@@ -41,6 +41,10 @@ public class MainConnect {
         return conn;
     }
 
+    public final boolean isOpen() {
+        return conn != null;
+    }
+
     public final String toString() {
         return "This class manaages connecting to database server.";
     }
