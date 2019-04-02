@@ -24,6 +24,13 @@ public class DatabaseMachine {
 
     }
 
+    public DatabaseMachine() {
+        System.out.println("Instance created, but no connection made.");
+        System.out.println("Call constructor with connection param");
+        System.out.println("Excmple: DatabaseMachine dm = new " +
+                "DatabaseMachine(connection)");
+    }
+
     public void createDB(String dbName) {
         this.dbName = dbName;
 
@@ -85,7 +92,7 @@ public class DatabaseMachine {
                         i++;
                     }
                 }
-                conn.close();
+
 
             } catch (SQLException e) {
                 System.out.println("Error processing statement" + e.getMessage());
@@ -94,5 +101,10 @@ public class DatabaseMachine {
         } else {
             System.out.println("Not connected to mySQL");
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Maintains methods to use with databases. Connection: " + conn;
     }
 }

@@ -42,12 +42,25 @@ public class MainConnect {
 
     }
 
+    public void doClose() {
+        if(isOpen()) {
+            // Shut down
+            try {
+                conn.close();
+                System.out.println("SQL connection closed.");
+            } catch (SQLException e) {
+                System.out.println("Error closing connection: " + e.getMessage());
+            }
+        }
+    }
+
     public final boolean isOpen() {
         return conn != null;
     }
 
     public final String toString() {
-        return "This class manaages connecting to database server.";
+        return "Main connection to mySQL server.";
     }
+
 
 }
