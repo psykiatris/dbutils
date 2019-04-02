@@ -1,7 +1,5 @@
 package org.palczewski.edit;
 
-import org.palczewski.connect.MainConnect;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -50,6 +48,16 @@ public class DatabaseMachine {
 
     public void removeDatabase(String dbName) {
         if(conn != null) {
+            try {
+                stmt = conn.createStatement();
+                String drop = "drop database " + dbName;
+                stmt.executeUpdate(drop);
+                System.out.println("Removed " + dbName + " from mySQL " +
+                        "server.");
+
+            } catch (SQLException e) {
+                System.out.println("Error dropping database " + dbName + ": " + e.getMessage());
+            }
 
         } else {
             System.out.println("No connection to server.");
