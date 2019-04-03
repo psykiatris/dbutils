@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.MessageFormat;
 
 /*
 This class will contain all of the methods to work with databases, such
@@ -15,27 +16,26 @@ isOpen().
 Will be used by application at initialization.
  */
 public class DatabaseMachine {
-    String dbName; // Name of database
-    Connection conn;
-    Statement stmt;
+    public static final String NO_CONNECTION = "No connection to server.";
+    String dbName;
+    private Connection conn;
+    private Statement stmt;
 
-    public DatabaseMachine(Connection conn) {
-        this.conn = conn;
+    public DatabaseMachine(Connection connection) {
+        conn = connection;
 
     }
 
     public DatabaseMachine() {
-        System.out.println("Instance created, but no connection made.");
-        System.out.println("Call constructor with connection param");
-        System.out.println("Excmple: DatabaseMachine dm = new " +
-                "DatabaseMachine(connection)");
+        System.out.println("No connection made");
+        System.out.println("Use: new DatabaseMachin(<your connection>)");
     }
 
-    public void createDB(String dbName) {
-        this.dbName = dbName;
+    public final void createDB(String name) {
+        dbName = name;
 
         if(conn != null) {
-            System.out.println("Creating database " + dbName + ".");
+            System.out.println(MessageFormat.format("Creating database {0}.", dbName));
             try {
                 stmt = conn.createStatement();
                 String sql = "create database " + dbName;
@@ -48,12 +48,14 @@ public class DatabaseMachine {
             /*
         If no connection, do nothing.
          */
-            System.out.println("no connection to server");
+            System.out.println(NO_CONNECTION);
         }
 
     }
 
-    public void removeDatabase(String dbName) {
+    public final void removeDatabase(String name) {
+        dbName = name;
+
         if(conn != null) {
             try {
                 stmt = conn.createStatement();
@@ -67,15 +69,39 @@ public class DatabaseMachine {
             }
 
         } else {
-            System.out.println("No connection to server.");
+            System.out.println(NO_CONNECTION);
         }
     }
 
-    public void switchDatabase(String dbName) {
+    public final void switchDatabase(String name) {
+        dbName = name;
+
         if(conn != null) {
+            try {
+                stmt = conn.createStatement();
+                String sql = "SELECT database()";
+                try(ResultSet rs = stmt.executeQuery(sql)) {
+                    if(rs != null) {
+                        while(rs.next()) {
+                            if(rs.getString(1) == dbName) {
+                                System.out.println("Currently in " + dbName);
+                            } else {
+                                stmt = conn.createStatement();
+                                String change = "use " + dbName;
+                                stmt.executeUpdate(change);
+                                System.out.println("Changed to " + dbName);
+                            }
+                        }
+                    }
+                }
+
+            } catch (SQLException e) {
+                System.out.println("Error processing SQL statement: " + e.getMessage());
+            }
+
 
         } else {
-            System.out.println("No connection to server.");
+            System.out.println(NO_CONNECTION);
         }
     }
 
@@ -99,7 +125,7 @@ public class DatabaseMachine {
             }
 
         } else {
-            System.out.println("Not connected to mySQL");
+            System.out.println(NO_CONNECTION);
         }
     }
 
