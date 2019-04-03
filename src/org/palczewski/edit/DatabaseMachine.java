@@ -83,15 +83,18 @@ public class DatabaseMachine {
                 try(ResultSet rs = stmt.executeQuery(sql)) {
                     if(rs != null) {
                         while(rs.next()) {
-                            if(rs.getString(1) == dbName) {
-                                System.out.println("Currently in " + dbName);
-                            } else {
+                            if(rs.getString(1) == null) {
+                                System.out.println("No database selected");
                                 stmt = conn.createStatement();
                                 String change = "use " + dbName;
                                 stmt.executeUpdate(change);
                                 System.out.println("Changed to " + dbName);
+                            } else {
+                                System.out.println("Currently in " + dbName);
                             }
-                        }
+
+
+                            }
                     }
                 }
 
