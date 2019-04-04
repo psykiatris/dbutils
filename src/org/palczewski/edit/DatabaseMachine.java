@@ -16,7 +16,7 @@ isOpen().
 Will be used by application at initialization.
  */
 public class DatabaseMachine {
-    public static final String NO_CONNECTION = "No connection to server.";
+    private static final String NO_CONNECTION = "No connection to server.";
     String dbName;
     private Connection conn;
     private Statement stmt;
@@ -72,37 +72,61 @@ public class DatabaseMachine {
             System.out.println(NO_CONNECTION);
         }
     }
-
-    public final void switchDatabase(String name) {
-        dbName = name;
-
+    private boolean inDatabase() {
+        // Make sure currently in database
         if(conn != null) {
+            //query
             try {
                 stmt = conn.createStatement();
-                String sql = "SELECT database()";
-                try(ResultSet rs = stmt.executeQuery(sql)) {
-                    if(rs != null) {
-                        while(rs.next()) {
-                            if(rs.getString(1) == null) {
-                                System.out.println("No database selected");
-                                stmt = conn.createStatement();
-                                String change = "use " + dbName;
-                                stmt.executeUpdate(change);
-                                System.out.println("Changed to " + dbName);
-                            } else {
-                                System.out.println("Currently in " + dbName);
-                            }
+                String qry = "SELECT database()";
+                try(ResultSet rs = stmt.executeQuery(qry)) {
+                    while(rs.next()) {
+                        if(rs.getString(1) == null) {
+                            System.out.println("No database selected");
 
-
-                            }
+                        } else {
+                            // Set dbName
+                            dbName = rs.getString(1);
+                            return true;
+                        }
                     }
+
+
+                } catch (SQLException e) {
+                    System.out.println("SQL error in inDatabase(): " + e.getMessage());
                 }
-
             } catch (SQLException e) {
-                System.out.println("Error processing SQL statement: " + e.getMessage());
+                System.out.println("SQL error in creating statement: " + e.getMessage());
+            } finally {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    System.out.println("Problem closing statement");
+                }
             }
+        }
+        return false;
+    }
+
+    public final void switchDatabase(String name) {
 
 
+        if(conn != null) {
+            if(inDatabase() && dbName.equals(name)) {
+                System.out.println("Currently in " + dbName);
+            } else {
+                // Otherwise switch to desired database
+                try {
+                    stmt = conn.createStatement();
+                    dbName = name;
+                    String change = "USE " + dbName;
+                    stmt.executeUpdate(change);
+                    System.out.println("Switched to " + dbName);
+
+                } catch (SQLException e) {
+                    System.out.println("SQL rror in switchDatabase(): " + e.getMessage());
+                }
+            }
         } else {
             System.out.println(NO_CONNECTION);
         }

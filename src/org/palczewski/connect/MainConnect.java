@@ -12,15 +12,17 @@ public class MainConnect {
     private static Statement stmt;
     private String user;
     private String pw;
+    private String dbName;
 
-    private static final String url =
-            "jdbc:mysql://localhost:3306/?verifyServerCertificate=false&useSSL=true";
+
 
     public MainConnect() {
         // Creates an instance
     }
 
-    public Connection doConnect(String user, String pw) {
+    public Connection doConnect(String user, String pw, String dbName) {
+        String url = "jdbc:mysql://localhost:3306/" + dbName +
+                "?verifyServerCertificate=false&useSSL=true";
         /*
         Creates and returns a connection object to the calling app.
          */
@@ -42,7 +44,7 @@ public class MainConnect {
 
     }
 
-    public void doClose() {
+    public final void doClose() {
         if(isOpen()) {
             // Shut down
             try {
@@ -54,7 +56,7 @@ public class MainConnect {
         }
     }
 
-    public final boolean isOpen() {
+    final boolean isOpen() {
         return conn != null;
     }
 
