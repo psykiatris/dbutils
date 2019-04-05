@@ -7,29 +7,31 @@ needed.
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.MessageFormat;
 
 public class UserMachine {
     Connection conn;
     Statement stmt;
 
-    UserMachine() {
+    public UserMachine() {
         // Tell user to pass connection
         System.out.println("Only an instance is created. No connection " +
                 "made.");
         System.out.println("Usage: UserMachine(<your connection>)");
     }
 
-    UserMachine(Connection connection) {
+    public UserMachine(Connection connection) {
         conn = connection;
     }
 
-    public void createUser(String name, String pw) {
+    public final void createUser(String name, String pw) {
         // Will create user
         if(conn != null) {
             try {
                 stmt = conn.createStatement();
-                String qry = "CREATE USER IF NOT EXISTS" + name +
-            "IDENTIFIED BY \"" + pw + "\" WITH MAX_USER_CONNECTIONS 1 " +
+                String qry = "CREATE USER IF NOT EXISTS " + name +
+            " IDENTIFIED BY \"" + pw + "\" WITH " +
+                        "MAX_USER_CONNECTIONS 1 " +
                         "PASSWORD EXPIRE INTERVAL 90 DAY";
                 stmt.executeUpdate(qry);
                 stmt.close();
@@ -40,6 +42,15 @@ public class UserMachine {
         } else {
             System.out.println("No connection.");
         }
+        System.out.println(MessageFormat.format("Successfully created a mySQL account for {0}.", name));
 
+    }
+
+    public void grantUser(String name) {
+        // Will grant named users with privileges.
+    }
+
+    public void setPassword(String name, String newPW) {
+        // Allows user to change password
     }
 }

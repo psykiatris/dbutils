@@ -17,6 +17,7 @@ Will be used by application at initialization.
  */
 public class DatabaseMachine {
     private static final String NO_CONNECTION = "No connection to server.";
+
     String dbName;
     private Connection conn;
     private Statement stmt;
@@ -38,12 +39,15 @@ public class DatabaseMachine {
             System.out.println(MessageFormat.format("Creating database {0}.", dbName));
             try {
                 stmt = conn.createStatement();
-                String sql = "create database " + dbName;
+                String sql =
+                        MessageFormat.format("CREATE DATABASE IF NOT EXISTS {0} CHARACTER SET = utf8", dbName);
                 stmt.executeUpdate(sql);
+                stmt.close();
+                System.out.println(MessageFormat.format("Database {0} ready for input.", dbName));
             } catch (SQLException e) {
                 System.out.println("Error creating database " + e.getMessage());
             }
-            System.out.println("Database " + dbName + " ready for input.");
+
         } else {
             /*
         If no connection, do nothing.
@@ -59,19 +63,19 @@ public class DatabaseMachine {
         if(conn != null) {
             try {
                 stmt = conn.createStatement();
-                String drop = "drop database " + dbName;
+                String drop = MessageFormat.format("DROP DATABASE IF EXISTS {0}", dbName);
                 stmt.executeUpdate(drop);
-                System.out.println("Removed " + dbName + " from mySQL " +
-                        "server.");
+                System.out.println(MessageFormat.format("Removed {0} from mySQL.", dbName));
 
             } catch (SQLException e) {
-                System.out.println("Error dropping database " + dbName + ": " + e.getMessage());
+                System.out.println(MessageFormat.format("Error dropping database {0}: {1}", dbName, e.getMessage()));
             }
 
         } else {
             System.out.println(NO_CONNECTION);
         }
     }
+
     private boolean inDatabase() {
         // Make sure currently in database
         if(conn != null) {
@@ -93,10 +97,10 @@ public class DatabaseMachine {
 
 
                 } catch (SQLException e) {
-                    System.out.println("SQL error in inDatabase(): " + e.getMessage());
+                    System.out.println(MessageFormat.format("SQL error in inDatabase(): {0}", e.getMessage()));
                 }
             } catch (SQLException e) {
-                System.out.println("SQL error in creating statement: " + e.getMessage());
+                System.out.println(MessageFormat.format("SQL error in creating statement: {0}", e.getMessage()));
             } finally {
                 try {
                     stmt.close();
@@ -104,8 +108,12 @@ public class DatabaseMachine {
                     System.out.println("Problem closing statement");
                 }
             }
+        } else {
+            System.out.println(NO_CONNECTION);
+
         }
         return false;
+
     }
 
     public final void switchDatabase(String name) {
@@ -118,10 +126,10 @@ public class DatabaseMachine {
                 // Otherwise switch to desired database
                 try {
                     stmt = conn.createStatement();
-                    String change = "USE " + name;
+                    String change = MessageFormat.format("USE {0}", name);
                     stmt.executeUpdate(change);
                     dbName = name;
-                    System.out.println("Switched to " + dbName);
+                    System.out.println(MessageFormat.format("Switched to {0}", dbName));
 
                 } catch (SQLException e) {
                     System.out.println("SQL rror in switchDatabase(): " + e.getMessage());
@@ -136,7 +144,7 @@ public class DatabaseMachine {
         if(conn != null) {
             try {
                 stmt = conn.createStatement();
-                String list = "show databases";
+                String list = "SHOW DATABASES";
                 try (ResultSet rs = stmt.executeQuery(list)) {
                     System.out.println("List of databases on mySQL:");
                     int i = 1;
@@ -148,7 +156,7 @@ public class DatabaseMachine {
 
 
             } catch (SQLException e) {
-                System.out.println("Error processing statement" + e.getMessage());
+                System.out.println(MessageFormat.format("Error processing statement{0}", e.getMessage()));
             }
 
         } else {
@@ -157,7 +165,7 @@ public class DatabaseMachine {
     }
 
     @Override
-    public String toString() {
-        return "Maintains methods to use with databases. Connection: " + conn;
+    public final String toString() {
+        return MessageFormat.format("Maintains methods to use with databases. Connection: {0}", conn);
     }
 }
