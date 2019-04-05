@@ -28,7 +28,7 @@ public class DatabaseMachine {
 
     public DatabaseMachine() {
         System.out.println("No connection made");
-        System.out.println("Use: new DatabaseMachin(<your connection>)");
+        System.out.println("Usage: DatabaseMachin(<your connection>)");
     }
 
     public final void createDB(String name) {
@@ -118,9 +118,9 @@ public class DatabaseMachine {
                 // Otherwise switch to desired database
                 try {
                     stmt = conn.createStatement();
-                    dbName = name;
-                    String change = "USE " + dbName;
+                    String change = "USE " + name;
                     stmt.executeUpdate(change);
+                    dbName = name;
                     System.out.println("Switched to " + dbName);
 
                 } catch (SQLException e) {
