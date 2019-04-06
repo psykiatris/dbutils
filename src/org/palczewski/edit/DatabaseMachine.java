@@ -16,7 +16,7 @@ isOpen().
 Will be used by application at initialization.
  */
 public class DatabaseMachine {
-    private static final String NO_CONNECTION = "No connection to server.";
+    public static final String NO_CONNECTION = "No connection to server.";
 
     String dbName;
     private Connection conn;
@@ -99,15 +99,11 @@ public class DatabaseMachine {
                 } catch (SQLException e) {
                     System.out.println(MessageFormat.format("SQL error in inDatabase(): {0}", e.getMessage()));
                 }
+                stmt.close();
             } catch (SQLException e) {
                 System.out.println(MessageFormat.format("SQL error in creating statement: {0}", e.getMessage()));
-            } finally {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    System.out.println("Problem closing statement");
-                }
             }
+
         } else {
             System.out.println(NO_CONNECTION);
 
@@ -117,7 +113,6 @@ public class DatabaseMachine {
     }
 
     public final void switchDatabase(String name) {
-
 
         if(conn != null) {
             if(inDatabase() && dbName.equals(name)) {
@@ -130,6 +125,7 @@ public class DatabaseMachine {
                     stmt.executeUpdate(change);
                     dbName = name;
                     System.out.println(MessageFormat.format("Switched to {0}", dbName));
+                    stmt.close();
 
                 } catch (SQLException e) {
                     System.out.println("SQL rror in switchDatabase(): " + e.getMessage());
@@ -149,11 +145,11 @@ public class DatabaseMachine {
                     System.out.println("List of databases on mySQL:");
                     int i = 1;
                     while (rs.next()) {
-                        System.out.println(i + ": " + rs.getString(1));
+                        System.out.println(MessageFormat.format("{0}: {1}", i, rs.getString(1)));
                         i++;
                     }
                 }
-
+                stmt.close();
 
             } catch (SQLException e) {
                 System.out.println(MessageFormat.format("Error processing statement{0}", e.getMessage()));
