@@ -43,10 +43,24 @@ public class TableMachine {
             try {
                 stmt = conn.createStatement();
                 String table =
-                        MessageFormat.format("CREATE TABLE IF NOT EXISTS {0} (date TIMESTAMP PRIMARY KEY, lname CHAR(15), fname CHAR(15));", tName);
+                        MessageFormat.format("CREATE TABLE IF NOT EXISTS {0} (id INT KEY AUTO_INCREMENT, date DATE, first_name CHAR(15), last_name CHAR(15), timestamp TIMESTAMP) AUTO_INCREMENT = 1", tName);
                 stmt.executeUpdate(table);
                 stmt.close();
-                System.out.println(MessageFormat.format("Successfully created {0} table.", tName));
+                // Verify that table is created
+                stmt = conn.createStatement();
+                String show = "SHOW TABLES";
+                try(ResultSet rs = stmt.executeQuery(show)) {
+                    while(rs.next()) {
+                        if(rs.getString(1) == null) {
+                            System.out.println("No tables to list.");
+                        } else {
+                            if(rs.getString(1).equals(tName)) {
+                                System.out.println(MessageFormat.format("{0} created successfully.", tName));
+                            }
+                        }
+                    }
+                }
+                stmt.close();
 
             } catch (SQLException e) {
                 System.out.println(MessageFormat.format("SQL error in createTable(): {0}", e.getMessage()));
@@ -54,6 +68,12 @@ public class TableMachine {
         } else {
             System.out.println(DatabaseMachine.NO_CONNECTION);
         }
+    }
+
+    public void getColumns() {
+        /*
+        Return a list of column names for a table.
+         */
     }
 
     public void viewTables() {
@@ -88,8 +108,7 @@ public class TableMachine {
         if(conn != null) {
             try {
                 stmt = conn.createStatement();
-                String data = MessageFormat.format("INSERT INTO history (date, lname, fname) VALUES (\"{0}\", \"Holguin\", \"Jeffrey\")",
-                        LocalDateTime.now());
+                String data = MessageFormat.format(" INSERT INTO history (date, first_name, last_name) VALUES (\"{0}\", \"Damon\", \"Harris\")", LocalDate.now());
                 stmt.executeUpdate(data);
                 stmt.close();
 
@@ -115,9 +134,11 @@ public class TableMachine {
                         if(rs.getString(1) == null) {
                             System.out.println(NOTHING_TO_SHOW);
                         } else {
-                            System.out.println(MessageFormat.format("{0}\t{1}\t{2}", rs.getTimestamp(1),
-                                    rs.getString(2)
-                                    , rs.getString(3)));
+                            System.out.println(MessageFormat.format("{0" +
+                                            "} {1}\t{2} {3} ",
+                                    rs.getInt(1),
+                                    rs.getDate(2), rs.getString(3),
+                                    rs.getString(4), rs.getTimestamp(5)));
                         }
                     }
                 }
