@@ -1,12 +1,11 @@
 package org.palczewski.edit;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.sql.*;
 import java.text.MessageFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Scanner;
 
 /*
 This class contains methods to be used with tables (creation, deletion,
@@ -23,6 +22,9 @@ public class TableMachine {
          */
     Connection conn;
     Statement stmt;
+    PreparedStatement pstmt;
+    BufferedReader br;
+    Scanner in;
 
     public TableMachine(Connection conn) {
         this.conn = conn;
@@ -106,15 +108,36 @@ public class TableMachine {
          record into the table defined in the template createTable().
          */
         if(conn != null) {
-            try {
-                stmt = conn.createStatement();
-                String data = MessageFormat.format(" INSERT INTO history (date, first_name, last_name) VALUES (\"{0}\", \"Damon\", \"Harris\")", LocalDate.now());
-                stmt.executeUpdate(data);
-                stmt.close();
+            try(Scanner in = new Scanner(System.in)) {
+                try {
+                    String data = "INSERT INTO history (date, first_name, last_name) VALUES (?, ?, ?)";
+                    pstmt = conn.prepareStatement(data);
+                    // Get input
+                    int count = 1;
+                    while(count <= 5) {
+                        System.out.println("====Enter details====");
+                        System.out.print("Enter date: ");
+                        String d = in.nextLine();
+                        System.out.print("Enter first name: ");
+                        String fname = in.nextLine();
+                        System.out.print("Enter last name: ");
+                        String lname = in.nextLine();
+                        // process input
+                        pstmt.setString(2, d.trim());
+                        pstmt.setString(3, fname.trim());
+                        pstmt.setString(4, lname.trim());
+                        int i = pstmt.executeUpdate();
+                        System.out.println(i + " input success");
+                        count++;
+                    }
 
-            } catch (SQLException e) {
-                System.out.println(MessageFormat.format("SQL error in insertRecord(): {0}", e.getMessage()));
+
+                } catch (SQLException e) {
+                    System.out.println("SQL error in insertRecord(): " + e.getMessage());
+                }
+
             }
+
         } else {
             System.out.println(DatabaseMachine.NO_CONNECTION);
         }
