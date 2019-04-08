@@ -1,8 +1,5 @@
 package org.palczewski.edit;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.*;
 import java.text.MessageFormat;
 import java.util.Scanner;
@@ -23,8 +20,7 @@ public class TableMachine {
     Connection conn;
     Statement stmt;
     PreparedStatement pstmt;
-    BufferedReader br;
-    Scanner in;
+
 
     public TableMachine(Connection conn) {
         this.conn = conn;
@@ -45,7 +41,8 @@ public class TableMachine {
             try {
                 stmt = conn.createStatement();
                 String table =
-                        MessageFormat.format("CREATE TABLE IF NOT EXISTS {0} (id INT KEY AUTO_INCREMENT, date DATE, first_name CHAR(15), last_name CHAR(15), timestamp TIMESTAMP) AUTO_INCREMENT = 1", tName);
+                        MessageFormat.format("CREATE TABLE IF NOT EXISTS" +
+                                " {0} (id INT KEY AUTO_INCREMENT, date DATE, first_name CHAR(15), last_name CHAR(15), timestamp TIMESTAMP) AUTO_INCREMENT = 1", tName);
                 stmt.executeUpdate(table);
                 stmt.close();
                 // Verify that table is created
@@ -101,16 +98,21 @@ public class TableMachine {
             }
         }
     }
+    /*
+    In the method below, it should open a new Scanner and read input.
+    However, when run, it throws an exception saying "line not found."
+    as if the System.in is closed, though I opened it explicitly.
+     */
 
     public void insertRecord() {
         /*
-        Other apps MUST override this method. This will insert a default
-         record into the table defined in the template createTable().
+        Must override with app's specific definitions, etc.
+        This will input into the table created in createTable().
          */
         if(conn != null) {
             try(Scanner in = new Scanner(System.in)) {
                 try {
-                    String data = "INSERT INTO history (date, first_name, last_name) VALUES (?, ?, ?)";
+                    String data = "INSERT INTO history (date, first_name, last_name) VALUES (?, ?, ?, ?)";
                     pstmt = conn.prepareStatement(data);
                     // Get input
                     int count = 1;
@@ -123,6 +125,12 @@ public class TableMachine {
                         System.out.print("Enter last name: ");
                         String lname = in.nextLine();
                         // process input
+                        /*
+                        for this to be effective, need to get the last
+                        id integer to use as the number to input. Rename
+                         count to another temp variable.
+                         */
+                        pstmt.setInt(1, count);
                         pstmt.setString(2, d.trim());
                         pstmt.setString(3, fname.trim());
                         pstmt.setString(4, lname.trim());
