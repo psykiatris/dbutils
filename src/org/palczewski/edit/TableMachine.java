@@ -84,7 +84,7 @@ public class TableMachine {
                         } else {
                             // Display results
                             System.out.println(rs.getString(1));
-                            System.out.println("Rows: " + rs.getRow());
+
                         }
                     }
                 }
