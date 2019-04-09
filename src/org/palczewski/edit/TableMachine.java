@@ -68,10 +68,33 @@ public class TableMachine {
         }
     }
 
-    public void getColumns() {
+    public void getColumns(String tName) {
         /*
         Return a list of column names for a table.
          */
+        // Check connection
+        if(conn != null) {
+            try {
+                stmt = conn.createStatement();
+                String qry = "SHOW COLUMNS FROM " + tName;
+                try(ResultSet rs = stmt.executeQuery(qry)) {
+                    while(rs.next()) {
+                        if(rs.getRow() == 0) {
+                            System.out.println("Empty set");
+                        } else {
+                            // Display results
+                            System.out.println(rs.getString(1));
+                            System.out.println("Rows: " + rs.getRow());
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                System.out.println("SQL error in getColumns(): " + e.getMessage());
+            }
+        } else {
+            System.out.println(DatabaseMachine.NO_CONNECTION);
+        }
+
     }
 
     public void viewTables() {
@@ -83,10 +106,10 @@ public class TableMachine {
                 System.out.println("Table List:");
                 try(ResultSet rs = stmt.executeQuery(show)) {
                     while(rs.next()) {
-                        if(rs.getString(1) == null) {
+                        if(rs.getRow() == 0) {
                             System.out.println(NOTHING_TO_SHOW);
                         } else {
-                            System.out.println(rs.getString(1));
+                            System.out.println(rs.getRow() + " " + rs.getString(1));
                         }
                     }
 
