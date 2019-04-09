@@ -111,8 +111,7 @@ public class TableMachine {
         if(conn != null) {
             try(Scanner in = new Scanner(System.in)) {
                 try {
-                    String data = "INSERT INTO history (date, " +
-                            "first_name, last_name) VALUES (?, ?, ?)";
+                    String data = "INSERT INTO history (date, first_name, last_name) VALUES (?, ?, ?)";
                     pstmt = conn.prepareStatement(data);
                     // Get input
                     int count = 1;
@@ -125,12 +124,6 @@ public class TableMachine {
                         System.out.print("Enter last name: ");
                         String lname = in.nextLine();
                         // process input
-                        /*
-                        for this to be effective, need to get the last
-                        id integer to use as the number to input. Rename
-                         count to another temp variable.
-                         */
-                        //pstmt.setInt(1, count);
                         pstmt.setString(1, d.trim());
                         pstmt.setString(2, fname.trim());
                         pstmt.setString(3, lname.trim());
@@ -160,16 +153,15 @@ public class TableMachine {
                 stmt = conn.createStatement();
                 String qry = MessageFormat.format("SELECT * FROM {0}", tName);
                 try(ResultSet rs = stmt.executeQuery(qry)) {
-                    System.out.println("Records Display:");
+                    System.out.println(tName + " Records Display:");
+                    System.out.println("Date\tFirst\tLast\tTimestamp");
                     while(rs.next()) {
                         if(rs.getString(1) == null) {
                             System.out.println(NOTHING_TO_SHOW);
                         } else {
-                            System.out.println(MessageFormat.format("{0" +
-                                            "} {1}\t{2} {3} ",
-                                    rs.getInt(1),
-                                    rs.getDate(2), rs.getString(3),
-                                    rs.getString(4), rs.getTimestamp(5)));
+                            System.out.println(MessageFormat.format("{0}" +
+                                    " {1} {2} {3}", rs.getDate(1), rs.getString(2), rs.getString(3), rs.getString(4)));
+
                         }
                     }
                 }
