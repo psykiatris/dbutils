@@ -30,6 +30,12 @@ public class TableMachine {
         System.out.println("Usage: TableMachine(<your connection>");
     }
 
+    public void createTable() {
+        // Allow classses extending this class to customize their own
+        // table.
+
+    }
+
     public void createTable(String tName) {
         /*
         Defines default table wit columns (date, lname, fname).
