@@ -50,7 +50,7 @@ public class UserMachine {
         if(conn != null) {
             try {
                 stmt = conn.createStatement();
-                String grant = MessageFormat.format("GRANT SELECT, INSERT, UPDATE, DELETE, CREATE ON {0}.* TO {1}", dbName, name);
+                String grant = MessageFormat.format("GRANT SELECT, INSERT, UPDATE, DELETE, CREATE REFERENCES ON {0}.* TO {1}", dbName, name);
                 stmt.executeUpdate(grant);
                 stmt.close();
                 // Show grants
