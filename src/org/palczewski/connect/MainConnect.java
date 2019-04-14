@@ -1,6 +1,7 @@
 package org.palczewski.connect;
 
 import java.sql.*;
+import java.text.MessageFormat;
 
 /*
 This class will provide the main connection to mySQL. Can be used by
@@ -8,6 +9,8 @@ other applications.
  */
 public class MainConnect {
 
+    private static final String DRIVER = "com.mysql.jdbc.Driver";
+    private static final String CONNECT = "Connected to server.";
     static Connection conn;
     private static Statement stmt;
     private String user;
@@ -27,18 +30,43 @@ public class MainConnect {
         Creates and returns a connection object to the calling app.
          */
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName(DRIVER);
             /*
             Per inspection, DriverManager has been superseded by javax
             .sql.Datasoure. (Need to update)
              */
             conn = DriverManager.getConnection(url, user, pw);
-            System.out.println("Connected to server.");
+            System.out.println(CONNECT);
 
         } catch (ClassNotFoundException e) {
-            System.out.println("Class Not Found: " + e.getMessage());
+            System.out.println(MessageFormat.format("Class was not Found: {0}", e.getMessage()));
         } catch (SQLException e) {
-            System.out.println("Error connecting to mySQL server: " + e.getMessage());
+            System.out.println(MessageFormat.format("SQL error connecting to mySQL server: {0}", e.getMessage()));
+        }
+        return conn;
+
+    }
+
+    // Overload connection for no database
+    // For creation of users
+    public Connection doConnect(String user, String pw) {
+        String url = "jdbc:mysql://localhost:3306/?verifyServerCertificate=false&useSSL=true";
+        /*
+        Creates and returns a connection object to the calling app.
+         */
+        try {
+            Class.forName(DRIVER);
+            /*
+            Per inspection, DriverManager has been superseded by javax
+            .sql.Datasoure. (Need to update)
+             */
+            conn = DriverManager.getConnection(url, user, pw);
+            System.out.println(CONNECT);
+
+        } catch (ClassNotFoundException e) {
+            System.out.println(MessageFormat.format("Class Not Found: {0}", e.getMessage()));
+        } catch (SQLException e) {
+            System.out.println(MessageFormat.format("Error connecting to mySQL server: {0}", e.getMessage()));
         }
         return conn;
 

@@ -25,6 +25,7 @@ public class TableMachine {
     public TableMachine(Connection conn) {
         this.conn = conn;
     }
+
     public TableMachine() {
         System.out.println("No connection established");
         System.out.println("Usage: TableMachine(<your connection>");
