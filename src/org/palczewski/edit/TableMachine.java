@@ -104,6 +104,35 @@ public class TableMachine {
 
     }
 
+    public void viewTable(String tName) {
+        if(conn != null) {
+            try {
+
+                stmt = conn.createStatement();
+                String qry = "SELECT * FROM " + tName;
+                try(ResultSet rs = stmt.executeQuery(qry)) {
+                    ResultSetMetaData rsmd = rs.getMetaData();
+                    int i = 1;
+                    while(i <= rsmd.getColumnCount()) {
+                        String columnName = rsmd.getColumnName(i);
+                        String columnType = rsmd.getColumnTypeName(i);
+                        System.out.println("The name of the column " + i + "is:");
+                        System.out.println(columnType);
+
+                        i++;
+
+
+                    }
+                }
+                stmt.close();
+
+            } catch (SQLException e) {
+                System.out.println("SQL error viewing table: " + e.getMessage());
+            }
+
+        }
+    }
+
     public void viewTables() {
         if(conn != null) {
             try {
