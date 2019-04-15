@@ -1,9 +1,6 @@
 package org.palczewski.edit;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.MessageFormat;
 
 /*
@@ -17,6 +14,7 @@ Will be used by application at initialization.
  */
 public class DatabaseMachine {
     public static final String NO_CONNECTION = "No connection to server.";
+    public static final String TIMEOUT = "Connection timed out.";
 
     String dbName;
     private Connection conn;
@@ -35,24 +33,28 @@ public class DatabaseMachine {
     public final void createDB(String name) {
         dbName = name;
 
-        if(conn != null) {
-            System.out.println(MessageFormat.format("Creating database {0}.", dbName));
-            try {
-                stmt = conn.createStatement();
-                String sql =
-                        MessageFormat.format("CREATE DATABASE IF NOT EXISTS {0} CHARACTER SET = utf8", dbName);
-                stmt.executeUpdate(sql);
-                stmt.close();
-                System.out.println(MessageFormat.format("Database {0} ready for input.", dbName));
-            } catch (SQLException e) {
-                System.out.println("Error creating database " + e.getMessage());
-            }
+        try {
+            if(conn.isValid(120)) {
+                System.out.println(MessageFormat.format("Creating database {0}.", dbName));
+                try {
+                    stmt = conn.createStatement();
+                    String sql =
+                            MessageFormat.format("CREATE DATABASE IF NOT EXISTS {0} CHARACTER SET = utf8", dbName);
+                    stmt.executeUpdate(sql);
+                    stmt.close();
+                    System.out.println(MessageFormat.format("Database {0} ready for input.", dbName));
+                } catch (SQLException e) {
+                    System.out.println("Error creating database " + e.getMessage());
+                }
 
-        } else {
+            } else {
             /*
         If no connection, do nothing.
          */
-            System.out.println(NO_CONNECTION);
+                System.out.println(NO_CONNECTION);
+            }
+        } catch (SQLException e) {
+            System.out.println(TIMEOUT);
         }
 
     }
@@ -60,103 +62,143 @@ public class DatabaseMachine {
     public final void removeDatabase(String name) {
         dbName = name;
 
-        if(conn != null) {
-            try {
-                stmt = conn.createStatement();
-                String drop = MessageFormat.format("DROP DATABASE IF EXISTS {0}", dbName);
-                stmt.executeUpdate(drop);
-                System.out.println(MessageFormat.format("Removed {0} from mySQL.", dbName));
+        try {
+            if(conn.isValid(120)) {
+                try {
+                    stmt = conn.createStatement();
+                    String drop = MessageFormat.format("DROP DATABASE IF EXISTS {0}", dbName);
+                    stmt.executeUpdate(drop);
+                    System.out.println(MessageFormat.format("Removed {0} from mySQL.", dbName));
 
-            } catch (SQLException e) {
-                System.out.println(MessageFormat.format("Error dropping database {0}: {1}", dbName, e.getMessage()));
+                } catch (SQLException e) {
+                    System.out.println(MessageFormat.format("Error dropping database {0}: {1}", dbName, e.getMessage()));
+                }
+
+            } else {
+                System.out.println(NO_CONNECTION);
             }
-
-        } else {
-            System.out.println(NO_CONNECTION);
+        } catch (SQLException e) {
+            System.out.println(TIMEOUT);
         }
     }
 
-    private boolean inDatabase() {
-        // Make sure currently in database
-        if(conn != null) {
-            //query
-            try {
-                stmt = conn.createStatement();
-                String qry = "SELECT database()";
-                try(ResultSet rs = stmt.executeQuery(qry)) {
-                    while(rs.next()) {
-                        if(rs.getString(1) == null) {
-                            System.out.println("No database selected");
 
-                        } else {
-                            // Set dbName
-                            dbName = rs.getString(1);
-                            return true;
+    public final void switchDatabase(String name) {
+
+        try {
+            if(conn.isValid(120)) {
+                if(conn.getCatalog().equals(name)) {
+                    System.out.println("Currently in " + dbName);
+                } else {
+                    // Otherwise switch to desired database
+                    try {
+                        stmt = conn.createStatement();
+                        String change = MessageFormat.format("USE {0}", name);
+                        stmt.executeUpdate(change);
+                        dbName = name;
+                        System.out.println(MessageFormat.format("Switched to {0}", dbName));
+                        stmt.close();
+
+                    } catch (SQLException e) {
+                        System.out.println("SQL rror in switchDatabase(): " + e.getMessage());
+                    }
+                }
+            } else {
+                System.out.println(NO_CONNECTION);
+            }
+        } catch (SQLException e) {
+            System.out.println(TIMEOUT);
+        }
+    }
+
+    public void viewDatabases() {
+        /*
+        Returns a list of databases available.
+         */
+        try {
+            if(conn.isValid(120)) {
+                try {
+                    DatabaseMetaData dmd = conn.getMetaData();
+                    try(ResultSet rs = dmd.getCatalogs()) {
+                        while(rs.next()) {
+                            System.out.println(rs.getString(1));
                         }
                     }
 
 
                 } catch (SQLException e) {
-                    System.out.println(MessageFormat.format("SQL error in inDatabase(): {0}", e.getMessage()));
+                    System.out.println("SQL error in viewDatabases(): " + e.getMessage());
                 }
-                stmt.close();
-            } catch (SQLException e) {
-                System.out.println(MessageFormat.format("SQL error in creating statement: {0}", e.getMessage()));
+
+            } else {
+                System.out.println(NO_CONNECTION);
             }
-
-        } else {
-            System.out.println(NO_CONNECTION);
-
+        } catch (SQLException e) {
+            System.out.println(TIMEOUT);
         }
-        return false;
-
     }
 
-    public final void switchDatabase(String name) {
-
-        if(conn != null) {
-            if(inDatabase() && dbName.equals(name)) {
-                System.out.println("Currently in " + dbName);
-            } else {
-                // Otherwise switch to desired database
+    public void getNameVersion() {
+        /*
+        This will return the vesion of mySQL being used.
+         */
+        try {
+            if(conn.isValid(120)) {
                 try {
-                    stmt = conn.createStatement();
-                    String change = MessageFormat.format("USE {0}", name);
-                    stmt.executeUpdate(change);
-                    dbName = name;
-                    System.out.println(MessageFormat.format("Switched to {0}", dbName));
-                    stmt.close();
+                    DatabaseMetaData dmd = conn.getMetaData();
+                    String product = dmd.getDatabaseProductName();
+                    String version = dmd.getDatabaseProductVersion();
+                    System.out.println(MessageFormat.format("Using {0} {1}", product, version));
 
                 } catch (SQLException e) {
-                    System.out.println("SQL rror in switchDatabase(): " + e.getMessage());
+                    System.out.println("SQL error in getNameVersion(): " + e.getMessage());
                 }
+            } else {
+                System.out.println(NO_CONNECTION);
             }
-        } else {
-            System.out.println(NO_CONNECTION);
+        } catch (SQLException e) {
+            System.out.println(TIMEOUT);
         }
     }
 
-    public void viewDatabase() {
-        if(conn != null) {
-            try {
-                stmt = conn.createStatement();
-                String list = "SHOW DATABASES";
-                try (ResultSet rs = stmt.executeQuery(list)) {
-                    System.out.println("List of databases on mySQL:");
-                    int i = 1;
-                    while (rs.next()) {
-                        System.out.println(MessageFormat.format("{0}: {1}", i, rs.getString(1)));
-                        i++;
-                    }
+    public void getDriverInfo() {
+        try {
+            if(conn.isValid(120)) {
+                try {
+                    DatabaseMetaData dmd = conn.getMetaData();
+                    System.out.println(MessageFormat.format("Using driver: {0} Version: {1}.{2}", dmd.getDriverName(), dmd.getDriverMajorVersion(), dmd.getDriverMinorVersion()));
+                    System.out.println(MessageFormat.format("JDBC Version: {0}.{1}", dmd.getJDBCMajorVersion(), dmd.getJDBCMinorVersion()));
+
+                } catch (SQLException e) {
+                    System.out.println("SQL error in getDriverInfo(): " + e.getMessage());
                 }
-                stmt.close();
 
-            } catch (SQLException e) {
-                System.out.println(MessageFormat.format("Error processing statement{0}", e.getMessage()));
+            } else {
+                System.out.println(NO_CONNECTION);
             }
+        } catch (SQLException e) {
+            System.out.println(TIMEOUT);
+        }
+    }
 
-        } else {
-            System.out.println(NO_CONNECTION);
+    public void getUserName() {
+        try {
+            if(conn.isValid(120)) {
+                try {
+                    DatabaseMetaData dmd = conn.getMetaData();
+                    System.out.println("Logged in as: " + dmd.getUserName());
+
+
+
+                } catch (SQLException e) {
+                    System.out.println("SQL error in getUserName(): " + e.getMessage());
+                }
+
+            } else {
+                System.out.println(NO_CONNECTION);
+            }
+        } catch (SQLException e) {
+            System.out.println(TIMEOUT);
         }
     }
 

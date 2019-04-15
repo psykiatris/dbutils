@@ -1,7 +1,12 @@
 package org.palczewski.edit;
 
+import org.testng.ReporterConfig;
+
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.MessageFormat;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Scanner;
 
 /*
@@ -12,6 +17,7 @@ Methods will be built with predefined use (as general as possible), but
 can be overridden by programs utilizing this library.
  */
 public class TableMachine {
+
     public static final String NOTHING_TO_SHOW = "Nothing to show";
     /*
         Other apps can pass their connection objects to use methods in this
@@ -20,6 +26,7 @@ public class TableMachine {
     Connection conn;
     Statement stmt;
     PreparedStatement pstmt;
+    ResultSetMetaData rsmd;
 
 
     public TableMachine(Connection conn) {
@@ -83,18 +90,20 @@ public class TableMachine {
         if(conn != null) {
             try {
                 stmt = conn.createStatement();
-                String qry = "SHOW COLUMNS FROM " + tName;
+                String qry = "SELECT * FROM " + tName;
                 try(ResultSet rs = stmt.executeQuery(qry)) {
-                    while(rs.next()) {
-                        if(rs.getRow() == 0) {
-                            System.out.println("Empty set");
-                        } else {
-                            // Display results
-                            System.out.println(rs.getString(1));
-
-                        }
+                    rsmd = rs.getMetaData();
+                    int i = 1;
+                    while(i <= rsmd.getColumnCount()) {
+                        String cName = rsmd.getColumnName(i);
+                        String cType = rsmd.getColumnTypeName(i);
+                        System.out.println(MessageFormat.format("Column: {0}\tType: {1}", cName, cType));
+                        i++;
                     }
+                    System.out.println("Number of columns: " + rsmd.getColumnCount());
                 }
+                stmt.close();
+
             } catch (SQLException e) {
                 System.out.println("SQL error in getColumns(): " + e.getMessage());
             }
@@ -104,36 +113,10 @@ public class TableMachine {
 
     }
 
-    public void viewTable(String tName) {
-        if(conn != null) {
-            try {
-
-                stmt = conn.createStatement();
-                String qry = "SELECT * FROM " + tName;
-                try(ResultSet rs = stmt.executeQuery(qry)) {
-                    ResultSetMetaData rsmd = rs.getMetaData();
-                    int i = 1;
-                    while(i <= rsmd.getColumnCount()) {
-                        String columnName = rsmd.getColumnName(i);
-                        String columnType = rsmd.getColumnTypeName(i);
-                        System.out.println("The name of the column " + i + "is:");
-                        System.out.println(columnType);
-
-                        i++;
-
-
-                    }
-                }
-                stmt.close();
-
-            } catch (SQLException e) {
-                System.out.println("SQL error viewing table: " + e.getMessage());
-            }
-
-        }
-    }
-
     public void viewTables() {
+        /*
+        Displays a list of tables in a database
+         */
         if(conn != null) {
             try {
 
@@ -168,7 +151,7 @@ public class TableMachine {
         This will input into the table created in createTable().
          */
         if(conn != null) {
-            try(Scanner in = new Scanner(System.in)) {
+            try(Scanner in = new Scanner(System.in, StandardCharsets.UTF_8)) {
                 try {
                     String data = "INSERT INTO history (date, first_name, last_name) VALUES (?, ?, ?)";
                     pstmt = conn.prepareStatement(data);
@@ -251,6 +234,27 @@ public class TableMachine {
             }
         } else {
             System.out.println(DatabaseMachine.NO_CONNECTION);
+        }
+    }
+
+
+    public void statement() {
+        try {
+            if(conn.isValid(120)) {
+                try {
+                    Map<String, Class<?>> typeMap = conn.getTypeMap();
+                    System.out.println(typeMap);
+
+
+                } catch (SQLException e) {
+                    System.out.println("SQL error in statment(): " + e.getMessage());
+                }
+
+            } else {
+                System.out.println(DatabaseMachine.NO_CONNECTION);
+            }
+        } catch (SQLException e) {
+            System.out.println(DatabaseMachine.TIMEOUT);
         }
     }
 
