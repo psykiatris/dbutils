@@ -1,12 +1,8 @@
 package org.palczewski.edit;
 
-import org.testng.ReporterConfig;
-
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.MessageFormat;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Scanner;
 
 /*
@@ -190,28 +186,37 @@ public class TableMachine {
         /*
         Will display records from table
          */
-        if(conn != null) {
-            try {
-                stmt = conn.createStatement();
-                String qry = MessageFormat.format("SELECT * FROM {0}", tName);
-                try(ResultSet rs = stmt.executeQuery(qry)) {
-                    System.out.println(tName + " Records Display:");
-                    System.out.println("Date\tFirst\tLast\tTimestamp");
-                    while(rs.next()) {
-                        if(rs.getString(1) == null) {
-                            System.out.println(NOTHING_TO_SHOW);
-                        } else {
-                            System.out.println(MessageFormat.format("{0}" +
-                                    " {1} {2} {3}", rs.getDate(1), rs.getString(2), rs.getString(3), rs.getString(4)));
+        try {
+            if(conn.isValid(120)) {
+                try {
+                    stmt = conn.createStatement();
+                    String qry = MessageFormat.format("SELECT User, super_priv FROM " +
+                            "{0}", tName);
+                    try(ResultSet rs = stmt.executeQuery(qry)) {
+                        rsmd = rs.getMetaData();
+                        int i = 1;
+                        while (i <= rsmd.getColumnCount()) {
+                            System.out.print(rsmd.getColumnName(i) + "\t");
+                            i++;
 
                         }
+                        System.out.print("\n");
                     }
+                    try(ResultSet rs = stmt.executeQuery(qry)) {
+                        while(rs.next()) {
+                            System.out.print(rs.getString(1) + "\t" + rs.getString(2) + "\n");
+                        }
+                    }
+
+
+                } catch (SQLException e) {
+                    System.out.println(MessageFormat.format("SQL error in viewRecords(): {0}", e.getMessage()));
                 }
-            } catch (SQLException e) {
-                System.out.println(MessageFormat.format("SQL error in viewRecords(): {0}", e.getMessage()));
+            } else {
+                System.out.println(DatabaseMachine.NO_CONNECTION);
             }
-        } else {
-            System.out.println(DatabaseMachine.NO_CONNECTION);
+        } catch (SQLException e) {
+            System.out.println(DatabaseMachine.TIMEOUT);
         }
     }
 
@@ -241,20 +246,18 @@ public class TableMachine {
     public void statement() {
         try {
             if(conn.isValid(120)) {
-                try {
-                    Map<String, Class<?>> typeMap = conn.getTypeMap();
-                    System.out.println(typeMap);
-
-
-                } catch (SQLException e) {
-                    System.out.println("SQL error in statment(): " + e.getMessage());
+                stmt = conn.createStatement();
+                String sql = "SELECT User FROM mysql.user";
+                try(ResultSet rs = stmt.executeQuery(sql)) {
+                    rsmd = rs.getMetaData();
+                    System.out.println("Table: " + rsmd.getTableName(1));
+                    while(rs.next()) {
+                        System.out.println(rs.getString(1));
+                    }
                 }
-
-            } else {
-                System.out.println(DatabaseMachine.NO_CONNECTION);
             }
         } catch (SQLException e) {
-            System.out.println(DatabaseMachine.TIMEOUT);
+            System.out.println("Error with result set " + e.getMessage());
         }
     }
 

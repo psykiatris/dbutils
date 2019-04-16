@@ -88,7 +88,7 @@ public class DatabaseMachine {
         try {
             if(conn.isValid(120)) {
                 if(conn.getCatalog().equals(name)) {
-                    System.out.println("Currently in " + dbName);
+                    System.out.println("Currently in " + conn.getCatalog());
                 } else {
                     // Otherwise switch to desired database
                     try {
