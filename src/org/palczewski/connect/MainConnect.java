@@ -1,5 +1,6 @@
 package org.palczewski.connect;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.text.MessageFormat;
 
@@ -9,6 +10,7 @@ other applications.
  */
 public class MainConnect {
 
+    DataSource ds;
     private static final String DRIVER = "com.mysql.jdbc.Driver";
     private static final String CONNECT = "Connected to server.";
     static Connection conn;
@@ -21,6 +23,7 @@ public class MainConnect {
 
     public MainConnect() {
         // Creates an instance
+
     }
 
     public Connection doConnect(String user, String pw, String dbName) {
@@ -31,11 +34,8 @@ public class MainConnect {
          */
         try {
             Class.forName(DRIVER);
-            /*
-            Per inspection, DriverManager has been superseded by javax
-            .sql.Datasoure. (Need to update)
-             */
             conn = DriverManager.getConnection(url, user, pw);
+
             System.out.println(CONNECT);
 
         } catch (ClassNotFoundException e) {
