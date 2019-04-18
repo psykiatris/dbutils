@@ -23,7 +23,7 @@ public class MyDataSourceFactory {
             props.load(fis);
             mysqlDS = new MysqlDataSource();
             mysqlDS.setURL(props.getProperty("MYSQL_DB_URL"));
-            mysqlDS.setURL(props.getProperty("MYSQL_DB_USERNAME "));
+            mysqlDS.setUser(props.getProperty("MYSQL_DB_USERNAME"));
             mysqlDS.setPassword(props.getProperty("MYSQL_DB_PASSWORD"));
 
         } catch (FileNotFoundException e) {
