@@ -13,6 +13,10 @@ import java.util.Properties;
 
 public class MyDataSourceFactory {
 
+    /*
+    This method will be used when a new user creates an account, as the
+    properties fild contains the user required to create other users.
+     */
     public static DataSource getMySQLDataSource() {
 
         Properties props = new Properties();
@@ -32,5 +36,19 @@ public class MyDataSourceFactory {
             System.out.println("IO exception in MyDataSourceFactory(): " + e.getMessage());
         }
         return mysqlDS;
+    }
+
+    public static DataSource getMySQLDataSource(String userN,
+                                                String userpass) {
+
+        MysqlDataSource mySqlDS = null;
+
+            mySqlDS = new MysqlDataSource();
+            mySqlDS.setURL("jdbc:mysql://localhost:3306/diabetes?verifyServerCertificate=false&useSSL=true");
+            mySqlDS.setURL(userN);
+            mySqlDS.setPassword(userpass);
+
+            return mySqlDS;
+
     }
 }

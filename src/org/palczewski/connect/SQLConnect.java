@@ -8,7 +8,7 @@ import java.text.MessageFormat;
 This class will provide the main connection to mySQL. Can be used by
 other applications.
  */
-public class MainConnect {
+public class SQLConnect {
 
     DataSource ds;
     private static final String DRIVER = "com.mysql.jdbc.Driver";
@@ -21,25 +21,23 @@ public class MainConnect {
 
 
 
-    public MainConnect() {
+    public SQLConnect() {
         // Creates an instance
 
     }
 
     public Connection doConnect(String user, String pw, String dbName) {
-        String url = "jdbc:mysql://localhost:3306/" + dbName +
-                "?verifyServerCertificate=false&useSSL=true";
         /*
-        Creates and returns a connection object to the calling app.
+        Creates A DataSource object and and returns a
+        connection object to
+        the calling app.
          */
+        ds = MyDataSourceFactory.getMySQLDataSource(user, pw);
         try {
-            Class.forName(DRIVER);
-            conn = DriverManager.getConnection(url, user, pw);
+            conn = ds.getConnection();
 
             System.out.println(CONNECT);
 
-        } catch (ClassNotFoundException e) {
-            System.out.println(MessageFormat.format("Class was not Found: {0}", e.getMessage()));
         } catch (SQLException e) {
             System.out.println(MessageFormat.format("SQL error connecting to mySQL server: {0}", e.getMessage()));
         }
@@ -49,18 +47,15 @@ public class MainConnect {
 
     // Overload connection for no database
     // For creation of users
-    public Connection doConnect(String user, String pw) {
-        String url = "jdbc:mysql://localhost:3306/?verifyServerCertificate=false&useSSL=true";
+    public Connection doConnect() {
         /*
-        Creates and returns a connection object to the calling app.
+        Creates and returns a connection object based on DataSource to the
+        calling
+        app.
          */
         try {
-            Class.forName(DRIVER);
-            /*
-            Per inspection, DriverManager has been superseded by javax
-            .sql.Datasoure. (Need to update)
-             */
-            conn = DriverManager.getConnection(url, user, pw);
+            ds = MyDataSourceFactory.getMySQLDataSource();
+            conn = ds.getConnection();
             System.out.println(CONNECT);
 
         } catch (ClassNotFoundException e) {
