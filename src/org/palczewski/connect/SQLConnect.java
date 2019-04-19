@@ -58,8 +58,6 @@ public class SQLConnect {
             conn = ds.getConnection();
             System.out.println(CONNECT);
 
-        } catch (ClassNotFoundException e) {
-            System.out.println(MessageFormat.format("Class Not Found: {0}", e.getMessage()));
         } catch (SQLException e) {
             System.out.println(MessageFormat.format("Error connecting to mySQL server: {0}", e.getMessage()));
         }
