@@ -26,8 +26,7 @@ public class MyDataSourceFactory {
         FileInputStream fis = null;
         MysqlDataSource mysqlDS = null;
         try {
-            fis = new FileInputStream("/home/patrick/dbutils/db" +
-                    ".properties");
+            fis = new FileInputStream("db.properties");
             props.load(fis);
             mysqlDS = new MysqlDataSource();
             mysqlDS.setServerTimezone(TZ);
@@ -48,10 +47,9 @@ public class MyDataSourceFactory {
     public static DataSource getMySQLDataSource(String userN,
                                                 String userpass) {
 
-        MysqlDataSource mySqlDS = null;
+        MysqlDataSource mySqlDS = new MysqlDataSource();
 
-            mySqlDS = new MysqlDataSource();
-            mySqlDS.setURL("jdbc:mysql://localhost:3306/diabetes?verifyServerCertificate=false&useSSL=true");
+        mySqlDS.setURL("jdbc:mysql://localhost:3306/diabetes?verifyServerCertificate=false&useSSL=true");
         try {
             mySqlDS.setServerTimezone(TZ);
         } catch (SQLException e) {
