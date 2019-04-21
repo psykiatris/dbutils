@@ -55,8 +55,8 @@ public class MyDataSourceFactory {
         } catch (SQLException e) {
             System.out.println("SQL error in factory method: " + e.getMessage());
         }
-        mySqlDS.setURL(userN);
-            mySqlDS.setPassword(userpass);
+        mySqlDS.setUser(userN);
+        mySqlDS.setPassword(userpass);
 
             return mySqlDS;
 
