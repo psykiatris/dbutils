@@ -39,7 +39,7 @@ public class DataSourceTest {
                 System.out.println("Employee ID: " + rs.getInt("empId") + ", Name: " + rs.getString("name"));
             }
 
-            DatasourceUtil.setUpEventTrace();
+
 
         } catch (SQLException e) {
             System.out.println("SQL error in testDatabase(): " + e.getMessage());
