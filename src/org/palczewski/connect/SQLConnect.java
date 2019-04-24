@@ -32,7 +32,7 @@ public class SQLConnect {
         connection object to
         the calling app.
          */
-        ds = MyDataSourceFactory.getMySQLDataSource(user, pw);
+        ds = MyDataSourceFactory.getMySQLDataSource(user, pw, dbName);
         try {
             conn = ds.getConnection();
 

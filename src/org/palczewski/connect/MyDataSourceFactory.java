@@ -45,11 +45,12 @@ public class MyDataSourceFactory {
     }
 
     public static DataSource getMySQLDataSource(String userN,
-                                                String userpass) {
+                                                String userpass,
+                                                String dbName) {
 
         MysqlDataSource mySqlDS = new MysqlDataSource();
 
-        mySqlDS.setURL("jdbc:mysql://localhost:3306/diabetes?verifyServerCertificate=false&useSSL=true");
+        mySqlDS.setURL("jdbc:mysql://localhost:3306/" + dbName + "?verifyServerCertificate=false&useSSL=true");
         try {
             mySqlDS.setServerTimezone(TZ);
         } catch (SQLException e) {
