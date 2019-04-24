@@ -1,4 +1,6 @@
-package org.palczewski.connect;
+package org.palczewski.test;
+
+import org.palczewski.connect.MyDataSourceFactory;
 
 import java.sql.Connection;
 
