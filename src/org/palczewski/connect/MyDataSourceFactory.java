@@ -52,14 +52,18 @@ public class MyDataSourceFactory {
         MysqlConnectionPoolDataSource mySqlDS =
                 new MysqlConnectionPoolDataSource();
 
-        mySqlDS.setURL("jdbc:mysql://localhost:3306/?verifyServerCertificate=false&useSSL=true");
+        mySqlDS.setURL("jdbc:mysql://localhost:3306/");
         try {
+            // set config
             mySqlDS.setServerTimezone(TZ);
+            mySqlDS.setVerifyServerCertificate(false);
+            mySqlDS.setUseSSL(true);
         } catch (SQLException e) {
             System.out.println("SQL error in factory method: " + e.getMessage());
         }
         mySqlDS.setUser(userN);
         mySqlDS.setPassword(userpass);
+
 
             return mySqlDS;
 
