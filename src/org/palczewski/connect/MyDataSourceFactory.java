@@ -6,7 +6,6 @@ A DataSource Factory class to handle connections
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 
 
-import javax.sql.DataSource;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,7 +20,7 @@ public class MyDataSourceFactory {
      */
 
     public static final String TZ = "America/Los_Angeles";
-    public static DataSource getMySQLDataSource() {
+    public static MysqlConnectionPoolDataSource getMySQLDataSource() {
 
         Properties props = new Properties();
         FileInputStream fis = null;
@@ -46,7 +45,7 @@ public class MyDataSourceFactory {
         return mysqlDS;
     }
 
-    public static DataSource getMySQLDataSource(String userN,
+    public static MysqlConnectionPoolDataSource getMySQLDataSource(String userN,
                                                 String userpass,
                                                 String dbName) {
 
