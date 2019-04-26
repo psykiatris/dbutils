@@ -35,6 +35,7 @@ public class SQLConnect {
         ds = MyDataSourceFactory.getMySQLDataSource(user, pw, dbName);
         try {
             conn = ds.getConnection();
+            conn.setCatalog(dbName);
 
             System.out.println(CONNECT);
 
@@ -56,7 +57,8 @@ public class SQLConnect {
         try {
             ds = MyDataSourceFactory.getMySQLDataSource();
             conn = ds.getConnection();
-            System.out.println(CONNECT);
+            conn.setCatalog("diabetes");
+
 
         } catch (SQLException e) {
             System.out.println(MessageFormat.format("Error connecting to mySQL server: {0}", e.getMessage()));
@@ -84,6 +86,7 @@ public class SQLConnect {
     public final String toString() {
         return "Main connection to mySQL server.";
     }
+
 
 
 }
