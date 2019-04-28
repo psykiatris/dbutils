@@ -58,7 +58,7 @@ public class SQLConnect {
         try {
             cpds = MyDataSourceFactory.getMySQLDataSource();
             conn = cpds.getConnection();
-            conn.setCatalog("diabetes");
+
 
 
         } catch (SQLException e) {

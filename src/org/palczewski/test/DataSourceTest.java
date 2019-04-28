@@ -33,6 +33,7 @@ public class DataSourceTest {
 
         try {
             conn = ds.getConnection();
+            conn.setCatalog("diabetes");
             stmt = conn.createStatement();
             rs = stmt.executeQuery("select empId, name from Employee");
             while(rs.next()) {

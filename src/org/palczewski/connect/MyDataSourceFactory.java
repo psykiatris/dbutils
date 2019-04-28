@@ -33,6 +33,9 @@ public class MyDataSourceFactory {
             mysqlDS.setURL(props.getProperty("MYSQL_DB_URL"));
             mysqlDS.setUser(props.getProperty("MYSQL_DB_USERNAME"));
             mysqlDS.setPassword(props.getProperty("MYSQL_DB_PASSWORD"));
+            mysqlDS.setVerifyServerCertificate(false);
+            mysqlDS.setUseSSL(true);
+
 
 
         } catch (FileNotFoundException e) {
