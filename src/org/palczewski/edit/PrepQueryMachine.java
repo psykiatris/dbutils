@@ -1,17 +1,17 @@
 package org.palczewski.edit;
 
-import com.mysql.cj.ClientPreparedQuery;
+import com.mysql.cj.AbstractPreparedQuery;
 import com.mysql.cj.NativeSession;
 
-public class PrepQueryMachine extends ClientPreparedQuery {
+public class PrepQueryMachine extends AbstractPreparedQuery {
 
-    NativeSession sess;
 
     public PrepQueryMachine(NativeSession sess) {
         super(sess);
-        this.sess = sess;
-        System.out.println("Connected at: " + sess.getConnectionCreationTimeMillis());;
     }
 
-
+    @Override
+    protected long[] computeMaxParameterSetSizeAndBatchSize(int i) {
+        return new long[0];
+    }
 }
