@@ -4,6 +4,7 @@ A DataSource Factory class to handle connections
  */
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
+import com.mysql.cj.jdbc.MysqlDataSource;
 
 
 import java.io.FileInputStream;
@@ -20,11 +21,11 @@ public class MyDataSourceFactory {
      */
 
     public static final String TZ = "America/Los_Angeles";
-    public static MysqlConnectionPoolDataSource getMySQLDataSource() {
+    public static MysqlDataSource getMySQLDataSource() {
 
         Properties props = new Properties();
         FileInputStream fis = null;
-        MysqlConnectionPoolDataSource mysqlDS = null;
+        MysqlDataSource mysqlDS = null;
         try {
             fis = new FileInputStream("db.properties");
             props.load(fis);
@@ -48,12 +49,12 @@ public class MyDataSourceFactory {
         return mysqlDS;
     }
 
-    public static MysqlConnectionPoolDataSource getMySQLDataSource(String userN,
-                                                String userpass,
-                                                String dbName) {
+    public static MysqlDataSource getMySQLDataSource(String userN,
+                                                     String userpass,
+                                                     String dbName) {
 
-        MysqlConnectionPoolDataSource mySqlDS =
-                new MysqlConnectionPoolDataSource();
+        MysqlDataSource mySqlDS =
+                new MysqlDataSource();
 
         mySqlDS.setURL("jdbc:mysql://localhost:3306/");
         try {

@@ -8,6 +8,7 @@ import java.util.List;
 public class MessageBuilderMachine implements MessageBuilder {
     @Override
     public Message buildSqlStatement(String s) {
+        return null;
 
     }
 

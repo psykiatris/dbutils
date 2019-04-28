@@ -1,6 +1,7 @@
 package org.palczewski.connect;
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
+import com.mysql.cj.jdbc.MysqlDataSource;
 
 import java.sql.*;
 import java.text.MessageFormat;
@@ -11,7 +12,7 @@ other applications.
  */
 public class SQLConnect {
 
-    MysqlConnectionPoolDataSource cpds;
+    MysqlDataSource ds = null;
     private static final String DRIVER = "com.mysql.jdbc.Driver";
     private static final String CONNECT = "Connected to server.";
     static Connection conn;
@@ -33,9 +34,9 @@ public class SQLConnect {
         connection object to
         the calling app.
          */
-        cpds = MyDataSourceFactory.getMySQLDataSource(user, pw, dbName);
+        ds = MyDataSourceFactory.getMySQLDataSource(user, pw, dbName);
         try {
-            conn = cpds.getConnection();
+            conn = ds.getConnection();
             conn.setCatalog(dbName);
 
             System.out.println(CONNECT);
@@ -56,8 +57,8 @@ public class SQLConnect {
         app.
          */
         try {
-            cpds = MyDataSourceFactory.getMySQLDataSource();
-            conn = cpds.getConnection();
+            ds = MyDataSourceFactory.getMySQLDataSource();
+            conn = ds.getConnection();
 
 
 
