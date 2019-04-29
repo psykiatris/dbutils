@@ -19,7 +19,7 @@ public class MyDataSourceFactory {
     This method will be used when a new user creates an account, as the
     properties fild contains the user required to create other users.
      */
-
+    // Need to set Timexone as it "claims" not to match.
     public static final String TZ = "America/Los_Angeles";
     public static MysqlDataSource getMySQLDataSource() {
 
