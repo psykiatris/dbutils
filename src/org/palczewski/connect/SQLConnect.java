@@ -1,6 +1,5 @@
 package org.palczewski.connect;
 
-import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
 
 import java.sql.*;
