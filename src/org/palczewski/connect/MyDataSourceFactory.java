@@ -3,7 +3,6 @@ package org.palczewski.connect;
 A DataSource Factory class to handle connections
  */
 
-import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
 
 
@@ -20,7 +19,7 @@ public class MyDataSourceFactory {
     properties fild contains the user required to create other users.
      */
     // Need to set Timexone as it "claims" not to match.
-    public static final String TZ = "America/Los_Angeles";
+    private static final String TZ = "America/Los_Angeles";
     public static MysqlDataSource getMySQLDataSource() {
 
         Properties props = new Properties();
@@ -29,7 +28,7 @@ public class MyDataSourceFactory {
         try {
             fis = new FileInputStream("db.properties");
             props.load(fis);
-            mysqlDS = new MysqlConnectionPoolDataSource();
+            mysqlDS = new MysqlDataSource();
             mysqlDS.setServerTimezone(TZ);
             mysqlDS.setURL(props.getProperty("MYSQL_DB_URL"));
             mysqlDS.setUser(props.getProperty("MYSQL_DB_USERNAME"));
