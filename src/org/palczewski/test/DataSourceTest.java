@@ -1,6 +1,7 @@
 package org.palczewski.test;
 
 import org.palczewski.connect.MyDataSourceFactory;
+import org.palczewski.proposed.QueryMachine;
 
 import java.sql.Connection;
 
@@ -16,6 +17,7 @@ public class DataSourceTest {
         testDataSource("mysql");
         System.out.println("*************");
 
+        QueryMachine qm = new QueryMachine();
     }
 
     private static void testDataSource(String dbType) {

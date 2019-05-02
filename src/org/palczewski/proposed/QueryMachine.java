@@ -1,24 +1,25 @@
 package org.palczewski.proposed;
 /*
-Proposed class to manage PreparedQuerys and anything of a query nature.
+Proposed class to manage server-side PreparedQuerys and anything of a
+query
+nature.
 
  */
 
-import com.mysql.cj.conf.DatabaseUrlContainer;
+import com.mysql.cj.NativeSession;
+import com.mysql.cj.conf.DefaultPropertySet;
 import com.mysql.cj.conf.HostInfo;
-
 
 public class QueryMachine {
 
-    DatabaseUrlContainer duc = new DatabaseUrlContainer() {
-        @Override
-        public String getDatabaseUrl() {
-            return "jdbc:mysql:";
-        }
-    };
+    DefaultPropertySet ps = new DefaultPropertySet();
+    NativeSession ns = new NativeSession(new HostInfo(), ps);
 
-    HostInfo hostinfo = new HostInfo(duc, "localhost",3306,"diabpro",
-            "diabpro");
+    public QueryMachine() {
+
+
+    }
+
 
 
 
