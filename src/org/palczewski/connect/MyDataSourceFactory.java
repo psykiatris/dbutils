@@ -48,9 +48,9 @@ public class MyDataSourceFactory {
         return mysqlDS;
     }
 
-    public static MysqlDataSource getMySQLDataSource(String userN,
-                                                     String userpass,
-                                                     String dbName) {
+    static MysqlDataSource getMySQLDataSource(String userN,
+                                              String userpass,
+                                              String dbName) {
 
         MysqlDataSource mySqlDS =
                 new MysqlDataSource();

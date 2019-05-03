@@ -6,24 +6,26 @@ nature.
 
  */
 
+import com.mysql.cj.AbstractPreparedQuery;
 import com.mysql.cj.NativeSession;
 import com.mysql.cj.conf.DefaultPropertySet;
-import com.mysql.cj.conf.HostInfo;
 
-public class QueryMachine {
+
+public class QueryMachine extends AbstractPreparedQuery {
 
     DefaultPropertySet ps = new DefaultPropertySet();
-    NativeSession ns = new NativeSession(new HostInfo(), ps);
+    NativeSession ns;
 
-    public QueryMachine() {
 
+    public QueryMachine(NativeSession sess) {
+        super(sess);
+        ns = sess;
 
     }
 
 
-
-
-
-
-
+    @Override
+    protected long[] computeMaxParameterSetSizeAndBatchSize(int i) {
+        return new long[0];
+    }
 }
