@@ -61,6 +61,7 @@ public class MyDataSourceFactory {
             mySqlDS.setServerTimezone(TZ);
             mySqlDS.setVerifyServerCertificate(false);
             mySqlDS.setUseSSL(true);
+
         } catch (SQLException e) {
             System.out.println("SQL error in factory method: " + e.getMessage());
         }

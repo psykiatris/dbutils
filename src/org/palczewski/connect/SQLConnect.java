@@ -32,6 +32,9 @@ public class SQLConnect {
         Creates A DataSource object and and returns a
         connection object to
         the calling app.
+
+        To bypass the factory, call ds = new DataSource();
+
          */
         ds = MyDataSourceFactory.getMySQLDataSource(user, pw, dbName);
         try {
@@ -85,7 +88,7 @@ public class SQLConnect {
     }
 
     public final String toString() {
-        return "Main connection to mySQL server.";
+        return "Returns a connection objhect using a DataSource";
     }
 
 
