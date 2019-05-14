@@ -12,7 +12,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class MyDataSourceFactory {
+public enum MyDataSourceFactory {
+    ;
 
     /*
     This method will be used when a new user creates an account, as the
@@ -20,6 +21,7 @@ public class MyDataSourceFactory {
      */
     // Need to set Timexone as it "claims" not to match.
     private static final String TZ = "America/Los_Angeles";
+
     public static MysqlDataSource getMySQLDataSource() {
 
         Properties props = new Properties();
