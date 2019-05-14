@@ -19,7 +19,9 @@ public enum MyDataSourceFactory {
     This method will be used when a new user creates an account, as the
     properties fild contains the user required to create other users.
      */
-    // Need to set Timexone as it "claims" not to match.
+    // Need to set Timexone MySQL does not accept "PDT" (the computer's
+    // timezone). Developers should change this to reflect their own
+    // server setup.
     private static final String TZ = "America/Los_Angeles";
 
     public static MysqlDataSource getMySQLDataSource() {
