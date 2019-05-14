@@ -19,10 +19,6 @@ public enum MyDataSourceFactory {
     This method will be used when a new user creates an account, as the
     properties fild contains the user required to create other users.
      */
-    // Need to set Timexone MySQL does not accept "PDT" (the computer's
-    // timezone). Developers should change this to reflect their own
-    // server setup.
-    private static final String TZ = "America/Los_Angeles";
 
     public static MysqlDataSource getMySQLDataSource() {
 
@@ -33,7 +29,7 @@ public enum MyDataSourceFactory {
             fis = new FileInputStream("db.properties");
             props.load(fis);
             mysqlDS = new MysqlDataSource();
-            mysqlDS.setServerTimezone(TZ);
+
             mysqlDS.setURL(props.getProperty("MYSQL_DB_URL"));
             mysqlDS.setUser(props.getProperty("MYSQL_DB_USERNAME"));
             mysqlDS.setPassword(props.getProperty("MYSQL_DB_PASSWORD"));
@@ -62,7 +58,7 @@ public enum MyDataSourceFactory {
         mySqlDS.setURL("jdbc:mysql://localhost:3306/");
         try {
             // set config
-            mySqlDS.setServerTimezone(TZ);
+
             mySqlDS.setVerifyServerCertificate(false);
             mySqlDS.setUseSSL(true);
 
