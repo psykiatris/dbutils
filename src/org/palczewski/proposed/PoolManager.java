@@ -1,8 +1,11 @@
 package org.palczewski.proposed;
 
+import com.mysql.cj.exceptions.CJException;
+import com.mysql.cj.jdbc.JdbcConnection;
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import com.mysql.cj.jdbc.MysqlPooledConnection;
+import com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping;
 
 
 import javax.sql.ConnectionEvent;
@@ -257,20 +260,27 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
         logInfo("Connection created since no connections available and " +
                 "pool has space for more connections. Pool size: " + size());
 
-        // Commented out as it isn't getting the right pooled connection
-        /*
-        // TODO: 5/21/19 Modify this method to return a MysqlPooledConnection type.
         pooledConnection =
-                this.connectionPoolDatasource.getPooledConnection();
-         */
-
-
-
+                getPooledConnection();
 
         pooledConnection.addConnectionEventListener(this);
 
         return pooledConnection;
 
+    }
+
+    /*
+    Overloading PoolDataSource to return MysqlPooledConnection.
+    Attempting to anyway....
+     */
+    public synchronized MysqlPooledConnection getPooledConnection() throws SQLException {
+        try {
+            Connection connection = this.getConnection();
+            MysqlPooledConnection mysqlPooledConnection = MysqlPooledConnection.getInstance((JdbcConnection)connection);
+            return mysqlPooledConnection;
+        } catch (CJException var4) {
+            throw SQLExceptionsMapping.translateException(var4);
+        }
     }
 
     private void reclaimAbandonedConnections() {
@@ -281,14 +291,21 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
         List abandonedConnections = new ArrayList(1);
 
         while(iterator.hasNext()) {
-            PooledConnection connectionInUse =
-                    (PooledConnection) iterator.next();
+            MysqlPooledConnection connectionInUse =
+                    (MysqlPooledConnection) iterator.next();
+
+            /*
             SessionConnectionWrapper sessionWrapper =
                     (SessionConnectionWrapper) this.sessionConnectionWrappers.get(connectionInUse);
+
+
+
 
             if(isSessionTimedOut(now, sessionWrapper,
                     sessionTimeoutMills)) {
                 abandonedConnections.add(sessionWrapper);
+                */
+
             }
         }
 
