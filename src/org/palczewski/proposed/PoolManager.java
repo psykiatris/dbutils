@@ -16,7 +16,8 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /*
-Proposed class to managed pooled connections.
+Proposed class to managed pooled connections. Attempting to utilized the
+ mysql Connector/J's PoolDataSource and PooledConnection classes.
 
 Based on a class developed by Jakob Jenkov.
 
@@ -40,7 +41,7 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
 
     // some booleans
     boolean doResetAutoCommit = false;
-    boolean doResetReadOnly = false
+    boolean doResetReadOnly = false;
     boolean doResetTrasactionIsolation = false;
     boolean doResetCatalog = false;
 
@@ -141,7 +142,7 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
 
         String managedPassword = getPassword();
         String managedUser = getUser();
-
+        // TODO: 5/20/19 This could probably be simplified more.
         if(((user == null) == (managedUser != null)) || (user != null && !user.equals(managedUser)) || ((password == null) == (managedPassword != null)) || password != null && !password.equals(managedPassword)) {
 
             throw new SQLException("Connection pool manager " +
@@ -151,7 +152,7 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
         return getConnection();
     }
 
-    public Connection getConnection(() throws SQLException {
+    public Connection getConnection() throws SQLException {
 
         MysqlPooledConnection pooledConnection = null;
 
@@ -249,15 +250,22 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
         }
     }
 
-    private PooledConnection createNewConnection() throws SQLException {
+    private MysqlPooledConnection createNewConnection() throws SQLException {
 
-        PooledConnection pooledConnection;
+        MysqlPooledConnection pooledConnection;
 
         logInfo("Connection created since no connections available and " +
                 "pool has space for more connections. Pool size: " + size());
 
+        // Commented out as it isn't getting the right pooled connection
+        /*
+        // TODO: 5/21/19 Modify this method to return a MysqlPooledConnection type.
         pooledConnection =
                 this.connectionPoolDatasource.getPooledConnection();
+         */
+
+
+
 
         pooledConnection.addConnectionEventListener(this);
 
@@ -279,7 +287,7 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
                     (SessionConnectionWrapper) this.sessionConnectionWrappers.get(connectionInUse);
 
             if(isSessionTimedOut(now, sessionWrapper,
-                    sessionTimeoutMills) {
+                    sessionTimeoutMills)) {
                 abandonedConnections.add(sessionWrapper);
             }
         }
@@ -327,11 +335,11 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
         this.notifyAll();
     }
 
-    private PooledConnection dequeueFirstIfAny() {
+    private MysqlPooledConnection dequeueFirstIfAny() {
         if(this.connectionsInactive.size() <= 0) {
             return null;
         }
-        return (PooledConnection) this.connectionsInactive.remove(0);
+        return (MysqlPooledConnection) this.connectionsInactive.remove(0);
     }
 
     public synchronized int size() {
@@ -408,7 +416,7 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
 
     private boolean isInvalid(MysqlPooledConnection pooledConnection) {
         try {
-            pooledConnection.getConnection().isValid() || pooledConnection.getConnection().isClosed();
+            pooledConnection.getConnection().isClosed();
         } catch (SQLException e) {
             logInfo("Error calling pooledConnection. Connection will be " +
                     "removed from pool.", e);
@@ -422,7 +430,7 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
     }
 
     private boolean poolHasSpaceForNewConnections() {
-        return this.maxPoolSize > size();1
+        return this.maxPoolSize > size();
     }
 
     public synchronized void connectionClosed(ConnectionEvent event) {
@@ -570,7 +578,7 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
     }
 
     public void setDriverClassName(String driverClassName) {
-        if(driverClassName.equals(MysqlDataSource.mysqlDriver) {
+        if(driverClassName.equals(MysqlDataSource.mysqlDriver)) {
             return;
         }
 
@@ -649,7 +657,7 @@ public class PoolManager extends MysqlConnectionPoolDataSource implements
 
         } catch (SQLException e) {
             throw new RuntimeException("Failed to retrieve the Login " +
-                    "Timeout value.")
+                    "Timeout value.");
         }
 
         StringBuffer sb =

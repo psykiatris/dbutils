@@ -1,6 +1,7 @@
 package org.palczewski.test;
 
 import com.mysql.cj.NativeSession;
+import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import org.palczewski.connect.MyDataSourceFactory;
 
 
