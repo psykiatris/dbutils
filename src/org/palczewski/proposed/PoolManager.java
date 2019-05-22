@@ -1,5 +1,7 @@
 package org.palczewski.proposed;
 
+import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
+
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 import javax.sql.PooledConnection;
@@ -7,6 +9,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 
 
 /*
@@ -20,7 +23,7 @@ Based on a class developed by Christian d'Heureuse, Inventec Informatik AG, Zuri
 public class PoolManager {
 
 
-    private ConnectionPoolDataSource dataSource;
+    private MysqlConnectionPoolDataSource dataSource;
     private int maxConnections;
     private long timeoutMs;
     private PrintWriter logWriter;
