@@ -1,696 +1,374 @@
 package org.palczewski.proposed;
 
-import com.mysql.cj.exceptions.CJException;
-import com.mysql.cj.jdbc.JdbcConnection;
-import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
-import com.mysql.cj.jdbc.MysqlDataSource;
-import com.mysql.cj.jdbc.MysqlPooledConnection;
-import com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping;
-
-
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 import javax.sql.PooledConnection;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.*;
-import java.util.logging.Logger;
+
 
 /*
 Proposed class to managed pooled connections. Attempting to utilized the
  mysql Connector/J's PoolDataSource and PooledConnection classes.
 
-Based on a class developed by Jakob Jenkov.
+Based on a class developed by Christian d'Heureuse, Inventec Informatik AG, Zurich, Switzerland.
 
 
  */
-public class PoolManager extends MysqlConnectionPoolDataSource implements
-        ConnectionEventListener {
+public class PoolManager {
 
 
+    private ConnectionPoolDataSource dataSource;
+    private int maxConnections;
+    private long timeoutMs;
+    private PrintWriter logWriter;
+    private Semaphore semaphore;
+    private PoolConnectionEventListener poolConnectionEventListener;
 
-    private static final int DEFAULT_MAX_POOL_SIZE = 8;
-    private boolean isPoolClosed = false;
-    private int sessionTimeout = 0;
-    private MysqlConnectionPoolDataSource connectionPoolDatasource = null;
-    private Set connectionInUse = new HashSet(1);
-    private List connectionsInactive = new ArrayList<>(1);
-    private Map sessionConnectionWrappers = new HashMap<>(1);
-    private int maxPoolSize = DEFAULT_MAX_POOL_SIZE;
-    private boolean initialized = false;
-    private int initialSize = 0;
+    // The following variables must only be accessed within synchronized blocks.
+// @GuardedBy("this") could by used in the future.
+    private LinkedList<PooledConnection> recycledConnections;          // list of inactive PooledConnections
+    private int activeConnections;            // number of active (open) connections of this pool
+    private boolean isDisposed;                   // true if this connection pool has been disposed
+    private boolean doPurgeConnection;            // flag to purge the connection currently beeing closed instead of recycling it
+    private PooledConnection connectionInTransition;       // a PooledConnection which is currently within a PooledConnection.getConnection() call, or null
 
-    // some booleans
-    boolean doResetAutoCommit = false;
-    boolean doResetReadOnly = false;
-    boolean doResetTrasactionIsolation = false;
-    boolean doResetCatalog = false;
-
-    boolean isAutoCommit = true;
-    boolean isReadOnlye = false;
-    int transactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
-    String catalog;
-
-    // optional query to validate connections
-    private String validationQuery = null;
-
-
-    public PoolManager() {
-        connectionPoolDatasource =
-                new MysqlConnectionPoolDataSource();
-
-    }
-
-    public PoolManager(String url, String user, String password,
-                       int maxPoolSize) throws SQLException {
-
-        connectionPoolDatasource =
-                new MysqlConnectionPoolDataSource();
-
-
-    }
-
-    public synchronized String getUrl() {
-        return connectionPoolDatasource.getUrl();
-    }
-
-    public synchronized void setUrl(String uel) {
-        connectionPoolDatasource.setUrl(url);
-
-    }
-
-    public synchronized String getUser() {
-        connectionPoolDatasource.getUser();
-    }
-
-    public synchronized void setUser(String user) {
-        connectionPoolDatasource.setUser(user);
-    }
-
-    public synchronized String getPassword() {
-        connectionPoolDatasource.getPassword();
-    }
-
-    public synchronized void setPassword(String password) {
-        connectionPoolDatasource.setPassword(password);
-    }
-
-    public synchronized int getSessionTimeout() {
-
-        return sessionTimeout;
-    }
-
-    public synchronized void setSessionTimeout(int sessionTimeout) {
-        this.sessionTimeout = sessionTimeout;
-    }
-
-    public synchronized int getMaxPoolSize() {
-        return maxPoolSize;
-    }
-
-    public synchronized void setMaxPoolSize(int maxPoolSize) {
-        this.maxPoolSize = maxPoolSize;
-    }
-
-    public synchronized int getLoginTimeout() {
-        return connectionPoolDatasource.getLoginTimeout();
-    }
-
-    public synchronized void setLoginTimeout(int seconds) {
-        try {
-            connectionPoolDatasource.setLoginTimeout(seconds);
-        } catch (SQLException e) {
-            System.out.println("SQL error setting LoginTimeout: " + e.getMessage());
-        }
-    }
-
-    public synchronized PrintWriter getLogWriter() {
-        return connectionPoolDatasource.getLogWriter();
-    }
-
-    public synchronized void setLogWriter(PrintWriter out) {
-        try {
-            connectionPoolDatasource.setLogWriter(out);
-        } catch (SQLException e) {
-            System.out.println("Error setting LogWriter: " + e.getMessage());
-        }
-    }
-
-    /*
-    Get a connection
+    /**
+     * Thrown in {@link #getConnection()} or {@link #getValidConnection()} when no free connection
+     * becomes available within <code>timeout</code> seconds.
      */
-    public Connection getConnection(String user, String password) throws SQLException {
+    public static class TimeoutException extends RuntimeException {
 
-        String managedPassword = getPassword();
-        String managedUser = getUser();
-        // TODO: 5/20/19 This could probably be simplified more.
-        if(((user == null) == (managedUser != null)) || (user != null && !user.equals(managedUser)) || ((password == null) == (managedPassword != null)) || password != null && !password.equals(managedPassword)) {
+        private static final long serialVersionUID = 1;
 
-            throw new SQLException("Connection pool manager " +
-                    "user/password validation failed");
-
-        }
-        return getConnection();
-    }
-
-    public Connection getConnection() throws SQLException {
-
-        MysqlPooledConnection pooledConnection = null;
-
-        synchronized (this) {
-            if(!initialized) {
-                if(initialSize > maxPoolSize) {
-                    throw new SQLException("Initial size of " + initialSize + " exceeds max. pool size of " + maxPoolSize);
-                }
-                logInfo("Pre-initialized " + initialSize + " physical " +
-                        "connections.");
-
-                for(int i = 0; i < initialSize; i++) {
-                    connectionsInactive.add(createNewConnection());
-                }
-                initialized = true;
-            }
-
-            long loginTimeoutExpiration =
-                    calculateLoginTimeoutExpiration();
-
-            while(pooledConnection == null) {
-                if(this.isPoolClosed) {
-                    throw new SQLException(String.format("This pool is closed. You cannot get any more connections from it."));
-                }
-
-                pooledConnection = dequeueFirstIfAny();
-
-                if(pooledConnection != null) {
-                    return wrapConnectionAndMarkAsInUse(pooledConnection);
-                }
-
-                if(poolHasSpaceForNewConnections()) {
-                    pooledConnection = createNewConnection();
-
-                    return wrapConnectionAndMarkAsInUse(pooledConnection);
-                }
-
-                if(this.sessionTimeout > 0) {
-                    reclaimAbandonedConnections();
-
-                    pooledConnection = dequeueFirstIfAny();
-
-                    if(pooledConnection != null) {
-                        return wrapConnectionAndMarkAsInUse();
-                    }
-                }
-
-                doWait(loginTimeExpiration);
-
-            }
-
-            return wrapConnectionAndMarkAsInUse();
-
+        public TimeoutException() {
+            super("Timeout while waiting for a free database connection.");
         }
 
-
-    }
-
-    // ---This was for JAVA6
-
-    public <T>T unwrap(java.lang.Class<T> iface) throws java.sql.SQLException {
-        if(isWrapperFor(iface)) {
-            return (T) this;
-        }
-
-        throw new SQLException("iface: " + iface);
-    }
-
-    public boolean isWrapperFor(java.lang.Class<?> iface) throws java.sql.SQLException {
-
-        return (iface != null && isAssignableFrom(this.getClass()));
-    }
-
-    // ----------Can take out
-
-    private void doWait(long loginTimeoutExpiration) throws SQLException {
-
-        try {
-            if(loginTimeoutExpiration > 9) {
-                long timeToWait =
-                        loginTimeoutExpiration - System.currentTimeMillis();
-
-                if(timeToWait > 0) {
-                    this.wait(timeToWait);
-                } else {
-                    throw new SQLException("No connections available " +
-                            "within the given login timeout: " + getLoginTimeout());
-                }
-            } else {
-                this.wait();
-            }
-        } catch (InterruptedException e) {
-            throw new SQLException("Thread was interrupted whiled " +
-                    "waiting for available connections.");
+        public TimeoutException(String msg) {
+            super(msg);
         }
     }
 
-    private MysqlPooledConnection createNewConnection() throws SQLException {
-
-        MysqlPooledConnection pooledConnection;
-
-        logInfo("Connection created since no connections available and " +
-                "pool has space for more connections. Pool size: " + size());
-
-        pooledConnection =
-                getPooledConnection();
-
-        pooledConnection.addConnectionEventListener(this);
-
-        return pooledConnection;
-
-    }
-
-    /*
-    Overloading PoolDataSource to return MysqlPooledConnection.
-    Attempting to anyway....
+    /**
+     * Constructs a MiniConnectionPoolManager object with a timeout of 60 seconds.
+     *
+     * @param dataSource the data source for the connections.
+     * @param maxConnections the maximum number of connections.
      */
-    public synchronized MysqlPooledConnection getPooledConnection() throws SQLException {
-        try {
-            Connection connection = this.getConnection();
-            MysqlPooledConnection mysqlPooledConnection = MysqlPooledConnection.getInstance((JdbcConnection)connection);
-            return mysqlPooledConnection;
-        } catch (CJException var4) {
-            throw SQLExceptionsMapping.translateException(var4);
-        }
+    public MiniConnectionPoolManager(ConnectionPoolDataSource dataSource, int maxConnections) {
+        this(dataSource, maxConnections, 60);
     }
 
-    private void reclaimAbandonedConnections() {
-
-        long now = System.currentTimeMillis();
-        long sessionTimeoutMills = sessionTimeout * 1000L;
-        Iterator iterator = connectionsInactive.iterator();
-        List abandonedConnections = new ArrayList(1);
-
-        while(iterator.hasNext()) {
-            MysqlPooledConnection connectionInUse =
-                    (MysqlPooledConnection) iterator.next();
-
-            /*
-            SessionConnectionWrapper sessionWrapper =
-                    (SessionConnectionWrapper) this.sessionConnectionWrappers.get(connectionInUse);
-
-
-
-
-            if(isSessionTimedOut(now, sessionWrapper,
-                    sessionTimeoutMills)) {
-                abandonedConnections.add(sessionWrapper);
-                */
-
-            }
-        }
-
-        iterator = abandonedConnections.iterator();
-
-        while(iterator.hasNext()) {
-            SessionConnectionWrapper sessionWrapper =
-                    (SessionConnectionWrapper) iterator.next();
-            closeSessionWrapper(sessionWrapper, "Error closing session " +
-                    "connection wrapper.");
-        }
-
-        if(abandonedConnections.size() > 1) {
-            abandonedConnections.clear();
-            this.notifyAll();
-        }
-
-
-    }
-
-    private void closeSessionWrapper(SessionConnectionWrapper sessionWrapper, String logText) {
-
+    /**
+     * Constructs a MiniConnectionPoolManager object.
+     *
+     * @param dataSource the data source for the connections.
+     * @param maxConnections the maximum number of connections.
+     * @param timeout the maximum time in seconds to wait for a free connection.
+     */
+    public MiniConnectionPoolManager(ConnectionPoolDataSource dataSource, int maxConnections,
+                                     int timeout) {
+        this.dataSource = dataSource;
+        this.maxConnections = maxConnections;
+        this.timeoutMs = timeout * 1000L;
         try {
-            sessionWrapper.close();
-
-
+            logWriter = dataSource.getLogWriter();
         } catch (SQLException e) {
-            logInfo(logText, e);
         }
-    }
-
-    private long calculateLoginTimeoutExpiration() throws SQLException {
-
-        long loginTimeoutExpiration = 0;
-
-        if(getLoginTimeout() > 0) {
-            loginTimeoutExpiration = 1000L * getLoginTimeout();
+        if (maxConnections < 1) {
+            throw new IllegalArgumentException("Invalid maxConnections value.");
         }
-        return loginTimeoutExpiration;
+        semaphore = new Semaphore(maxConnections, true);
+        recycledConnections = new LinkedList<PooledConnection>();
+        poolConnectionEventListener = new PoolConnectionEventListener();
     }
 
-    private void enqueue(PooledConnection connection) {
-        this.connectionsInactive.add(connection);
-        this.notifyAll();
-    }
-
-    private MysqlPooledConnection dequeueFirstIfAny() {
-        if(this.connectionsInactive.size() <= 0) {
-            return null;
-        }
-        return (MysqlPooledConnection) this.connectionsInactive.remove(0);
-    }
-
-    public synchronized int size() {
-        return this.connectionInUse.size() + this.connectionsInactive.size();
-    }
-
-    private Connection wrapConnectionAndMarkAsInUse(MysqlPooledConnection pooledConnection) throws SQLException {
-
-        pooledConnection = assureValidConnection(pooledConnection);
-
-        Connection conn = pooledConnection.getConnection();
-
-        if(doResetAutoCommit) {
-            conn.setAutoCommit(isAutoCommit);
-
-        }
-
-        if(doResetReadOnly) {
-            conn.setReadOnly(isReadOnlye);
-        }
-
-        if(doResetTrasactionIsolation) {
-            conn.setTransactionIsolation(transactionIsolation);
-        }
-
-        if(doResetCatalog) {
-            conn.setCatalog(catalog);
-        }
-
-        if(validationQuery != null) {
-
-            java.sql.ResultSet rs = null;
-
-            try {
-
-                rs = conn.createStatement().executeQuery(validationQuery);
-
-                if(!rs.next()) {
-                    throw new SQLException(" 0 rows returned");
-                }
-            } catch (SQLException e) {
-                closePhysically(pooledConnection, "Closing " +
-                        "non0validateing pooled connection");
-                throw new SQLException("Validation query failed. " + e.getMessage());
-            } finally {
-                if(rs != null) {
-                    rs.close();
-                }
-            }
-        }
-        this.connectionInUse.add(pooledConnection);
-
-        SessionConnectionWrapper sessionWrapper =
-                new SessionConnectionWrapper(pooledConnection.getConnection());
-
-        this.sessionConnectionWrappers.put(pooledConnection,
-                sessionWrapper);
-
-        return sessionWrapper;
-
-
-    }
-
-    private MysqlPooledConnection assureValidConnection(MysqlPooledConnection pooledConnection) throws SQLException {
-
-        if(isInvalid(pooledConnection)) {
-            closePhysically(pooledConnection, "Closing invalid pooled " +
-                    "connection");
-
-            return this.connectionPoolDatasource.getConnection();
-        }
-        return pooledConnection;
-    }
-
-    private boolean isInvalid(MysqlPooledConnection pooledConnection) {
-        try {
-            pooledConnection.getConnection().isClosed();
-        } catch (SQLException e) {
-            logInfo("Error calling pooledConnection. Connection will be " +
-                    "removed from pool.", e);
-        }
-        return false;
-    }
-
-    private boolean isSessionTimedOut(long now,
-                                      ConnectionSessionWrapper sessionWrapper, long sessionTimeoutMills) {
-        return now - sessionWrapper.getLatestActivityTime() >= sessionTimeoutMills;
-    }
-
-    private boolean poolHasSpaceForNewConnections() {
-        return this.maxPoolSize > size();
-    }
-
-    public synchronized void connectionClosed(ConnectionEvent event) {
-
-        MysqlPooledConnection connection =
-                (MysqlPooledConnection) event.getSource();
-
-        this.connectionInUse.remove(connection);
-        this.sessionConnectionWrappers.remove(connection);
-
-        if(!isPoolClosed) {
-            enqueue(connection);
-            logInfo("Connection returned to pool.");
-
-        } else {
-            closePhysically(connection, "closing returned connection");
-            logInfo("Connection returned to pool was closed because pool" +
-                    " is closed.");
-            this.notifyAll();
-        }
-    }
-
-    public synchronized void connectionErrorOccurred(ConnectionEvent event) {
-
-        MysqlPooledConnection connection =
-                (MysqlPooledConnection) event.getSource();
-        connection.removeStatementEventListener(this);
-        this.connectionInUse.remove(connection);
-        this.sessionConnectionWrappers.remove(connection);
-        logInfo("Fatal exception occurred on pooled connection. " +
-                "Connection removed from pool.");
-        logInfo(event.getSQLException());
-        closePhysically(connection, "closing invalid, removed connection" +
-                ".");
-        this.notifyAll();
-    }
-
-    public synchronized void close() {
-
-        this.isPoolClosed = true;
-
-        while(this.connectionsInactive.size() > 0) {
-            MysqlPooledConnection connection = dequeueFirstIfAny();
-
-            if(connection != null) {
-                closePhysically(connection, "closing inactive connection" +
-                        " when connection pool was closed.");
-            }
-        }
-    }
-
-    public synchronized void closeAndWait() throws InterruptedException {
-
-        close();
-
-        while(size() > 0) {
-            this.wait();
-        }
-    }
-
-    public synchronized void closeimmediately() {
-
-        close();
-
-        Iterator iterator = connectionInUse.iterator();
-
-        while(iterator.hasNext()) {
-            MysqlPooledConnection connection =
-                    (MysqlPooledConnection) iterator.next();
-            SessionConnectionWrapper sessionWrapper =
-                    (SessionConnectionWrapper) this.sessionConnectionWrappers.get(connection);
-            closeSessionWrapper(sessionWrapper, "Error closing session " +
-                    "wrapper. Connection pool was shutdown immediately");
-        }
-    }
-
-    private void closePhysically(MysqlPooledConnection source,
-                                 String logText) {
-        try {
-            source.close();
-
-        } catch (SQLException e) {
-            logInfo("Error " + logText, e);
-        }
-    }
-
-    private void logInfo(String message) {
-
-        connectionPoolDatasource.logInfo(message);
-    }
-
-    private void logInfo(Throwable t) {
-
-        connectionPoolDatasource.logInfo(t);
-    }
-
-    private void logInfo(String message, Throwable t) {
-
-        connectionPoolDatasource.logInfo(message, t);
-    }
-
-    public void setDefaultAutoCommnit(boolean defaultAutoCommit) {
-        isAutoCommit = defaultAutoCommit;
-        doResetAutoCommit = true;
-    }
-
-    public void setDefaultReadOnly(boolean defaultReadOnly) {
-
-        isReadOnlye = defaultReadOnly;
-        doResetReadOnly = true;
-    }
-
-    public void setDefaultTransactionIsolation(int defaultTransactionIsolation) {
-
-        transactionIsolation = defaultTransactionIsolation;
-        doResetTransactionIsolation = true;
-    }
-
-    public void setDefaultCatalog(String defaultCatalog) {
-
-        catalog = defaultCatalog;
-        doResetCatalog = true;
-    }
-
-    public boolean getDefaultAutoCommit() {
-        doResetAutoCommit = true;
-
-        return isAutoCommit;
-    }
-
-    public String getDefaultCatalog() {
-        doResetCatalog = true;
-
-        return catalog;
-    }
-
-    public int getDefaultTransactionIsolatio() {
-        doResetTransactionIsolation = true;
-        return transactionIsolation;
-    }
-
-    public boolean getDefaultReadOnly() {
-        doResetReadOnly = true;
-        return isReadOnlye;
-    }
-
-    public void setDriverClassName(String driverClassName) {
-        if(driverClassName.equals(MysqlDataSource.mysqlDriver)) {
+    /**
+     * Closes all unused pooled connections.
+     */
+    public synchronized void dispose() throws SQLException {
+        if (isDisposed) {
             return;
         }
-
-        throw new RuntimeException("This class only supports " + MysqlDataSource.mysqlDriver);
+        isDisposed = true;
+        SQLException e = null;
+        while (!recycledConnections.isEmpty()) {
+            PooledConnection pconn = recycledConnections.remove();
+            try {
+                pconn.close();
+            } catch (SQLException e2) {
+                if (e == null) {
+                    e = e2;
+                }
+            }
+        }
+        if (e != null) {
+            throw e;
+        }
     }
 
-    public String getDriverClassName() {
-        return MysqlDataSource.mysqlDriver.toString();
+    /**
+     * Retrieves a connection from the connection pool.
+     *
+     * <p>If <code>maxConnections</code> connections are already in use, the method
+     * waits until a connection becomes available or <code>timeout</code> seconds elapsed.
+     * When the application is finished using the connection, it must close it
+     * in order to return it to the pool.
+     *
+     * @return a new <code>Connection</code> object.
+     * @throws TimeoutException when no connection becomes available within <code>timeout</code>
+     * seconds.
+     */
+    public Connection getConnection() throws SQLException {
+        return getConnection2(timeoutMs);
     }
 
-    public void setInitialSize(int initialSize) {
-        this.initialSize = initialSize;
-    }
-
-    public int getinitialPoolSize() {
-        return getInitialSize();
-    }
-
-    public void setInitialPoolSize(int initialSize) {
-
-        setInitialSize(initialSize);
-
-    }
-
-    public int getInitialSize() {
-        return initialSize;
-    }
-
-    public int getnumActive() {
-        return connectionInUse.size();
-    }
-
-    public void setUsername(String username) {
-        setUser(username);
-    }
-
-    public String getusername() {
-        return getUser();
-    }
-
-    public void setMaxActive(int maxActive) {
-        setMaxPoolSize(maxActive);
-    }
-
-    public int getMaxActive() {
-        return getMaxPoolSize();
-    }
-
-    public void setValidationQuery(String validationQuery) {
-
-        this.validationQuery = validationQuery;
-
-    }
-
-    public String getValidationQuery() {
-        return validationQuery;
-    }
-
-    public void addConnectionProperty(String name, String value) {
-        this.connectionPoolDatasource.setConnectionProperty(name, value);
-
-
-    }
-
-    public void removeConnectionProperty(String name) {
-
-        this.connectionPoolDatasource.removeConnectionProperty(name);
-    }
-
-    public String toString() throws RuntimeException {
-
-        int timeout = 0;
-
+    private Connection getConnection2(long timeoutMs) throws SQLException {
+        // This routine is unsynchronized, because semaphore.tryAcquire() may block.
+        synchronized (this) {
+            if (isDisposed) {
+                throw new IllegalStateException("Connection pool has been disposed.");
+            }
+        }
         try {
-            timeout = getLoginTimeout();
+            if (!semaphore.tryAcquire(timeoutMs, TimeUnit.MILLISECONDS)) {
+                throw new TimeoutException();
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while waiting for a database connection.", e);
+        }
+        boolean ok = false;
+        try {
+            Connection conn = getConnection3();
+            ok = true;
+            return conn;
+        } finally {
+            if (!ok) {
+                semaphore.release();
+            }
+        }
+    }
 
+    private synchronized Connection getConnection3() throws SQLException {
+        if (isDisposed) {                                       // test again within synchronized lock
+            throw new IllegalStateException("Connection pool has been disposed.");
+        }
+        PooledConnection pconn;
+        if (!recycledConnections.isEmpty()) {
+            pconn = recycledConnections.remove();
+        } else {
+            pconn = dataSource.getPooledConnection();
+            pconn.addConnectionEventListener(poolConnectionEventListener);
+        }
+        Connection conn;
+        try {
+            // The JDBC driver may call ConnectionEventListener.connectionErrorOccurred()
+            // from within PooledConnection.getConnection(). To detect this within
+            // disposeConnection(), we temporarily set connectionInTransition.
+            connectionInTransition = pconn;
+            conn = pconn.getConnection();
+        } finally {
+            connectionInTransition = null;
+        }
+        activeConnections++;
+        assertInnerState();
+        return conn;
+    }
+
+    /**
+     * Retrieves a connection from the connection pool and ensures that it is valid
+     * by calling {@link Connection#isValid(int)}.
+     *
+     * <p>If a connection is not valid, the method tries to get another connection
+     * until one is valid (or a timeout occurs).
+     *
+     * <p>Pooled connections may become invalid when e.g. the database server is
+     * restarted.
+     *
+     * <p>This method is slower than {@link #getConnection()} because the JDBC
+     * driver has to send an extra command to the database server to test the connection.
+     *
+     * <p>This method requires Java 1.6 or newer.
+     *
+     * @throws TimeoutException when no valid connection becomes available within
+     * <code>timeout</code> seconds.
+     */
+    public Connection getValidConnection() {
+        long time = System.currentTimeMillis();
+        long timeoutTime = time + timeoutMs;
+        int triesWithoutDelay = getInactiveConnections() + 1;
+        while (true) {
+            Connection conn = getValidConnection2(time, timeoutTime);
+            if (conn != null) {
+                return conn;
+            }
+            triesWithoutDelay--;
+            if (triesWithoutDelay <= 0) {
+                triesWithoutDelay = 0;
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(
+                            "Interrupted while waiting for a valid database connection.", e);
+                }
+            }
+            time = System.currentTimeMillis();
+            if (time >= timeoutTime) {
+                throw new TimeoutException(
+                        "Timeout while waiting for a valid database connection.");
+            }
+        }
+    }
+
+    private Connection getValidConnection2(long time, long timeoutTime) {
+        long rtime = Math.max(1, timeoutTime - time);
+        Connection conn;
+        try {
+            conn = getConnection2(rtime);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve the Login " +
-                    "Timeout value.");
+            return null;
+        }
+        rtime = timeoutTime - System.currentTimeMillis();
+        int rtimeSecs = Math.max(1, (int) ((rtime + 999) / 1000));
+        try {
+            if (conn.isValid(rtimeSecs)) {
+                return conn;
+            }
+        } catch (SQLException e) {
+        }
+        // This Exception should never occur. If it nevertheless occurs, it's because of an error in the
+        // JDBC driver which we ignore and assume that the connection is not valid.
+        // When isValid() returns false, the JDBC driver should have already called connectionErrorOccurred()
+        // and the PooledConnection has been removed from the pool, i.e. the PooledConnection will
+        // not be added to recycledConnections when Connection.close() is called.
+        // But to be sure that this works even with a faulty JDBC driver, we call purgeConnection().
+        purgeConnection(conn);
+        return null;
+    }
+
+    // Purges the PooledConnection associated with the passed Connection from the connection pool.
+    private synchronized void purgeConnection(Connection conn) {
+        try {
+            doPurgeConnection = true;
+            // (A potential problem of this program logic is that setting the doPurgeConnection flag
+            // has an effect only if the JDBC driver calls connectionClosed() synchronously within
+            // Connection.close().)
+            conn.close();
+        } catch (SQLException e) {
+        }
+        // ignore exception from close()
+        finally {
+            doPurgeConnection = false;
+        }
+    }
+
+    private synchronized void recycleConnection(PooledConnection pconn) {
+        if (isDisposed || doPurgeConnection) {
+            disposeConnection(pconn);
+            return;
+        }
+        if (pconn == connectionInTransition) {
+            // This happens when a faulty JDBC driver calls ConnectionEventListener.connectionClosed()
+            // a second time within PooledConnection.getConnection().
+            return;
+        }
+        if (activeConnections <= 0) {
+            throw new AssertionError();
+        }
+        activeConnections--;
+        semaphore.release();
+        recycledConnections.add(pconn);
+        assertInnerState();
+    }
+
+    private synchronized void disposeConnection(PooledConnection pconn) {
+        pconn.removeConnectionEventListener(poolConnectionEventListener);
+        if (!recycledConnections.remove(pconn) && pconn != connectionInTransition) {
+            // If the PooledConnection is not in the recycledConnections list
+            // and is not currently within a PooledConnection.getConnection() call,
+            // we assume that the connection was active.
+            if (activeConnections <= 0) {
+                throw new AssertionError();
+            }
+            activeConnections--;
+            semaphore.release();
+        }
+        closeConnectionAndIgnoreException(pconn);
+        assertInnerState();
+    }
+
+    private void closeConnectionAndIgnoreException(PooledConnection pconn) {
+        try {
+            pconn.close();
+        } catch (SQLException e) {
+            log("Error while closing database connection: " + e.toString());
+        }
+    }
+
+    private void log(String msg) {
+        String s = "MiniConnectionPoolManager: " + msg;
+        try {
+            if (logWriter == null) {
+                System.err.println(s);
+            } else {
+                logWriter.println(s);
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    private synchronized void assertInnerState() {
+        if (activeConnections < 0) {
+            throw new AssertionError();
+        }
+        if (activeConnections + recycledConnections.size() > maxConnections) {
+            throw new AssertionError();
+        }
+        if (activeConnections + semaphore.availablePermits() > maxConnections) {
+            throw new AssertionError();
+        }
+    }
+
+    private class PoolConnectionEventListener implements ConnectionEventListener {
+
+        public void connectionClosed(ConnectionEvent event) {
+            PooledConnection pconn = (PooledConnection) event.getSource();
+            recycleConnection(pconn);
         }
 
-        StringBuffer sb =
-                new StringBuffer(PoolManager.class.getName() + " " +
-                        "instance\n   User: " + getUsername()
-                + "\n   Url: " + getUrl()
-                + "\n   Login Timeout: " + timeout
-                + "\n   Num. ACTIVE: " + getnumActive()
-                + "\n   Num. IDLE: " + getNumIdle());
-
-
-
+        public void connectionErrorOccurred(ConnectionEvent event) {
+            PooledConnection pconn = (PooledConnection) event.getSource();
+            disposeConnection(pconn);
+        }
     }
 
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        throw new SQLFeatureNotSupportedException();
+    /**
+     * Returns the number of active (open) connections of this pool.
+     *
+     * <p>This is the number of <code>Connection</code> objects that have been
+     * issued by {@link #getConnection()}, for which <code>Connection.close()</code>
+     * has not yet been called.
+     *
+     * @return the number of active connections.
+     **/
+    public synchronized int getActiveConnections() {
+        return activeConnections;
+    }
+
+    /**
+     * Returns the number of inactive (unused) connections in this pool.
+     *
+     * <p>This is the number of internally kept recycled connections,
+     * for which <code>Connection.close()</code> has been called and which
+     * have not yet been reused.
+     *
+     * @return the number of inactive connections.
+     **/
+    public synchronized int getInactiveConnections() {
+        return recycledConnections.size();
     }
 
 
