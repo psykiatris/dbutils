@@ -1,4 +1,4 @@
-package org.palczewski.proposed;
+package org.palczewski.connect;
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 
@@ -19,7 +19,9 @@ Proposed class to managed pooled connections. Attempting to utilize the
 
 Based on a class developed by Christian d'Heureuse, Inventec Informatik AG, Zurich, Switzerland.
 
-
+When the program is run, a PoolDataSource object is created and passed
+to PoolManager, then a connection is established using Poolmanager's
+getConnection() method.
  */
 public class PoolManager {
 

@@ -1,5 +1,6 @@
 package org.palczewski.connect;
 
+import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
 
 import java.sql.*;
@@ -11,7 +12,8 @@ other applications.
  */
 public class SQLConnect {
 
-    MysqlDataSource ds = null;
+    MysqlConnectionPoolDataSource ds = null;
+    PoolManager pm = null;
     private static final String DRIVER = "com.mysql.jdbc.Driver";
     private static final String CONNECT = "Connected to server.";
     static Connection conn;
@@ -29,16 +31,16 @@ public class SQLConnect {
 
     public Connection doConnect(String user, String pw, String dbName) {
         /*
-        Creates A DataSource object and and returns a
+        Creates a pooled DataSource object and and returns a
         connection object to
         the calling app.
 
-        To bypass the factory, call ds = new DataSource();
 
          */
         ds = MyDataSourceFactory.getMySQLDataSource(user, pw, dbName);
+        pm = new PoolManager(ds, 10);
         try {
-            conn = ds.getConnection();
+            conn = pm.getConnection();
             conn.setCatalog(dbName);
 
             System.out.println(CONNECT);
@@ -60,7 +62,7 @@ public class SQLConnect {
          */
         try {
             ds = MyDataSourceFactory.getMySQLDataSource();
-            conn = ds.getConnection();
+            conn = pm.getConnection();
 
 
 

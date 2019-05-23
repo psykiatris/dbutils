@@ -1,12 +1,11 @@
 package org.palczewski.connect;
 /*
-A DataSource Factory class to handle connections
+A DataSource Factory class to handle connections. First, this DataSource
+ is created, then passed to the Poolmanager, and then a connection is
+ made.
  */
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
-import com.mysql.cj.jdbc.MysqlDataSource;
-import org.palczewski.proposed.PoolManager;
-
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,7 +18,7 @@ public enum MyDataSourceFactory {
 
     /*
     This method will be used when a new user creates an account, as the
-    properties fild contains the user required to create other users.
+    properties file contains the user required to create other users.
      */
 
     public static MysqlConnectionPoolDataSource getMySQLDataSource() {
@@ -50,12 +49,17 @@ public enum MyDataSourceFactory {
         return mysqlDS;
     }
 
-    static MysqlDataSource getMySQLDataSource(String userN,
+    /*
+    This overloaded method will be used for each user with their own
+    credientials.
+     */
+
+    static MysqlConnectionPoolDataSource getMySQLDataSource(String userN,
                                               String userpass,
                                               String dbName) {
 
-        MysqlDataSource mySqlDS =
-                new MysqlDataSource();
+        MysqlConnectionPoolDataSource mySqlDS =
+                new MysqlConnectionPoolDataSource();
 
         mySqlDS.setURL("jdbc:mysql://localhost:3306/");
         try {

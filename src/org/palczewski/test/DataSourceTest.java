@@ -1,14 +1,12 @@
 package org.palczewski.test;
 
-import com.mysql.cj.NativeSession;
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import org.palczewski.connect.MyDataSourceFactory;
-import org.palczewski.proposed.PoolManager;
+import org.palczewski.connect.PoolManager;
 
 
 import java.sql.Connection;
 
-import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
