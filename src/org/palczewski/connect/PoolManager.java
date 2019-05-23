@@ -19,23 +19,24 @@ Proposed class to managed pooled connections. Attempting to utilize the
 
 Based on a class developed by Christian d'Heureuse, Inventec Informatik AG, Zurich, Switzerland.
 
-When the program is run, a PoolDataSource object is created and passed
+When the program is run, a DataSource object is created and passed
 to PoolManager, then a connection is established using Poolmanager's
 getConnection() method.
  */
 public class PoolManager {
 
 
-    private MysqlConnectionPoolDataSource dataSource;
-    private int maxConnections;
-    private long timeoutMs;
-    private PrintWriter logWriter;
-    private Semaphore semaphore;
-    private PoolConnectionEventListener poolConnectionEventListener;
+    private final String DISPOSED = "Connection pool has been disposed.";
+    private final MysqlConnectionPoolDataSource dataSource;
+    private final int maxConnections;
+    private final long timeoutMs;
+    private final PrintWriter logWriter;
+    private final Semaphore semaphore;
+    private final PoolManager.PoolConnectionEventListener poolConnectionEventListener;
 
     // The following variables must only be accessed within synchronized blocks.
 // @GuardedBy("this") could be used in the future.
-    private LinkedList<PooledConnection> recycledConnections;          // list of inactive PooledConnections
+    private final LinkedList<PooledConnection> recycledConnections;          // list of inactive PooledConnections
     private int activeConnections;            // number of active (open) connections of this pool
     private boolean isDisposed;                   // true if this connection pool has been disposed
     private boolean doPurgeConnection;            // flag to purge the connection currently beeing closed instead of recycling it
@@ -64,14 +65,14 @@ public class PoolManager {
                                      int timeout) {
         this.dataSource = dataSource;
         this.maxConnections = maxConnections;
-        this.timeoutMs = timeout * 1000L;
+        timeoutMs = timeout * 1000L;
         logWriter = dataSource.getLogWriter();
         if (maxConnections < 1) {
             throw new IllegalArgumentException("Invalid maxConnections value.");
         }
         semaphore = new Semaphore(maxConnections, true);
         recycledConnections = new LinkedList<>();
-        poolConnectionEventListener = new PoolConnectionEventListener();
+        poolConnectionEventListener = new PoolManager.PoolConnectionEventListener();
     }
 
     /**
@@ -107,7 +108,7 @@ public class PoolManager {
      * in order to return it to the pool.
      *
      * @return a new <code>Connection</code> object.
-     * @throws TimeoutException when no connection becomes available within <code>timeout</code>
+     * @throws PoolManager.TimeoutException when no connection becomes available within <code>timeout</code>
      * seconds.
      */
     public Connection getConnection() throws SQLException {
@@ -118,12 +119,12 @@ public class PoolManager {
         // This routine is unsynchronized, because semaphore.tryAcquire() may block.
         synchronized (this) {
             if (isDisposed) {
-                throw new IllegalStateException("Connection pool has been disposed.");
+                throw new IllegalStateException(DISPOSED);
             }
         }
         try {
             if (!semaphore.tryAcquire(timeoutMs, TimeUnit.MILLISECONDS)) {
-                throw new TimeoutException();
+                throw new PoolManager.TimeoutException("Error with setting semaphore");
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while waiting for a database connection.", e);
@@ -142,7 +143,7 @@ public class PoolManager {
 
     private synchronized Connection getConnection3() throws SQLException {
         if (isDisposed) {                                       // test again within synchronized lock
-            throw new IllegalStateException("Connection pool has been disposed.");
+            throw new IllegalStateException(DISPOSED);
         }
         PooledConnection pconn;
         if (!recycledConnections.isEmpty()) {
@@ -170,19 +171,6 @@ public class PoolManager {
      * Retrieves a connection from the connection pool and ensures that it is valid
      * by calling {@link Connection#isValid(int)}.
      *
-     * <p>If a connection is not valid, the method tries to get another connection
-     * until one is valid (or a timeout occurs).
-     *
-     * <p>Pooled connections may become invalid when e.g. the database server is
-     * restarted.
-     *
-     * <p>This method is slower than {@link #getConnection()} because the JDBC
-     * driver has to send an extra command to the database server to test the connection.
-     *
-     * <p>This method requires Java 1.6 or newer.
-     *
-     * @throws TimeoutException when no valid connection becomes available within
-     * <code>timeout</code> seconds.
      */
     public Connection getValidConnection() {
         long time = System.currentTimeMillis();
@@ -205,7 +193,7 @@ public class PoolManager {
             }
             time = System.currentTimeMillis();
             if (time >= timeoutTime) {
-                throw new TimeoutException(
+                throw new PoolManager.TimeoutException(
                         "Timeout while waiting for a valid database connection.");
             }
         }
@@ -292,12 +280,12 @@ public class PoolManager {
         try {
             pconn.close();
         } catch (SQLException e) {
-            log("Error while closing database connection: " + e.toString());
+            log("Error while closing database connection: " + e);
         }
     }
 
     private void log(String msg) {
-        String s = "MiniConnectionPoolManager: " + msg;
+        String s = "PoolManager: " + msg;
         try {
             if (logWriter == null) {
                 System.err.println(s);
@@ -336,11 +324,6 @@ public class PoolManager {
     /**
      * Returns the number of active (open) connections of this pool.
      *
-     * <p>This is the number of <code>Connection</code> objects that have been
-     * issued by {@link #getConnection()}, for which <code>Connection.close()</code>
-     * has not yet been called.
-     *
-     * @return the number of active connections.
      **/
     public synchronized int getActiveConnections() {
         return activeConnections;
@@ -349,11 +332,6 @@ public class PoolManager {
     /**
      * Returns the number of inactive (unused) connections in this pool.
      *
-     * <p>This is the number of internally kept recycled connections,
-     * for which <code>Connection.close()</code> has been called and which
-     * have not yet been reused.
-     *
-     * @return the number of inactive connections.
      **/
     public synchronized int getInactiveConnections() {
         return recycledConnections.size();

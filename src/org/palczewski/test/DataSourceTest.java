@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.MessageFormat;
 
 public class DataSourceTest {
 
@@ -44,8 +45,8 @@ public class DataSourceTest {
             while(rs.next()) {
                 System.out.println("Employee ID: " + rs.getInt("empId") + ", Name: " + rs.getString("name"));
             }
-            System.out.println("Active connections in pool: " + pm.getActiveConnections());
-            System.out.println("Inactive connections in pool: " + pm.getInactiveConnections());
+            System.out.println(MessageFormat.format("Active connections: {0}\nLise of valid connections:\n\t{1}\nInactive connection:{2}",
+                    pm.getActiveConnections(), pm.getValidConnection(), pm.getInactiveConnections()));
 
 
 
