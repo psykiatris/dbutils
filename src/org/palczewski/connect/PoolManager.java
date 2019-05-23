@@ -8,6 +8,7 @@ import javax.sql.PooledConnection;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -129,13 +130,13 @@ public class PoolManager {
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while waiting for a database connection.", e);
         }
-        boolean ok = false;
+        boolean isOk = false;
         try {
             Connection conn = getConnection3();
-            ok = true;
+            isOk = true;
             return conn;
         } finally {
-            if (!ok) {
+            if (!isOk) {
                 semaphore.release();
             }
         }
@@ -169,7 +170,6 @@ public class PoolManager {
 
     /**
      * Retrieves a connection from the connection pool and ensures that it is valid
-     * by calling {@link Connection#isValid(int)}.
      *
      */
     public Connection getValidConnection() {
@@ -338,5 +338,10 @@ public class PoolManager {
     }
 
 
-
+    @Override
+    public String toString() {
+        return MessageFormat.format("PoolManager:'\n{'maxConnections={0" +
+                        "},\n timeoutMs={1}, \n activeConnections={2}'}'",
+                maxConnections, timeoutMs, activeConnections);
+    }
 }
