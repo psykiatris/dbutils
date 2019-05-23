@@ -10,11 +10,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 
 /*
-Proposed class to managed pooled connections. Attempting to utilized the
- mysql Connector/J's PoolDataSource and PooledConnection classes.
+Proposed class to managed pooled connections. Attempting to utilize the
+ mysql Connector/J's PoolDataSource   class.
 
 Based on a class developed by Christian d'Heureuse, Inventec Informatik AG, Zurich, Switzerland.
 
@@ -31,17 +32,13 @@ public class PoolManager {
     private PoolConnectionEventListener poolConnectionEventListener;
 
     // The following variables must only be accessed within synchronized blocks.
-// @GuardedBy("this") could by used in the future.
+// @GuardedBy("this") could be used in the future.
     private LinkedList<PooledConnection> recycledConnections;          // list of inactive PooledConnections
     private int activeConnections;            // number of active (open) connections of this pool
     private boolean isDisposed;                   // true if this connection pool has been disposed
     private boolean doPurgeConnection;            // flag to purge the connection currently beeing closed instead of recycling it
     private PooledConnection connectionInTransition;       // a PooledConnection which is currently within a PooledConnection.getConnection() call, or null
 
-    /**
-     * Thrown in {@link #getConnection()} or {@link #getValidConnection()} when no free connection
-     * becomes available within <code>timeout</code> seconds.
-     */
     public static class TimeoutException extends RuntimeException {
 
         private static final long serialVersionUID = 1;
@@ -55,37 +52,23 @@ public class PoolManager {
         }
     }
 
-    /**
-     * Constructs a MiniConnectionPoolManager object with a timeout of 60 seconds.
-     *
-     * @param dataSource the data source for the connections.
-     * @param maxConnections the maximum number of connections.
-     */
-    public MiniConnectionPoolManager(ConnectionPoolDataSource dataSource, int maxConnections) {
+    public PoolManager(MysqlConnectionPoolDataSource dataSource,
+                  int maxConnections) {
         this(dataSource, maxConnections, 60);
     }
 
-    /**
-     * Constructs a MiniConnectionPoolManager object.
-     *
-     * @param dataSource the data source for the connections.
-     * @param maxConnections the maximum number of connections.
-     * @param timeout the maximum time in seconds to wait for a free connection.
-     */
-    public MiniConnectionPoolManager(ConnectionPoolDataSource dataSource, int maxConnections,
+    public PoolManager(MysqlConnectionPoolDataSource dataSource,
+                    int maxConnections,
                                      int timeout) {
         this.dataSource = dataSource;
         this.maxConnections = maxConnections;
         this.timeoutMs = timeout * 1000L;
-        try {
-            logWriter = dataSource.getLogWriter();
-        } catch (SQLException e) {
-        }
+        logWriter = dataSource.getLogWriter();
         if (maxConnections < 1) {
             throw new IllegalArgumentException("Invalid maxConnections value.");
         }
         semaphore = new Semaphore(maxConnections, true);
-        recycledConnections = new LinkedList<PooledConnection>();
+        recycledConnections = new LinkedList<>();
         poolConnectionEventListener = new PoolConnectionEventListener();
     }
 
