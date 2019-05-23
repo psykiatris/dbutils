@@ -3,7 +3,9 @@ package org.palczewski.connect;
 A DataSource Factory class to handle connections
  */
 
+import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
+import org.palczewski.proposed.PoolManager;
 
 
 import java.io.FileInputStream;
@@ -20,15 +22,15 @@ public enum MyDataSourceFactory {
     properties fild contains the user required to create other users.
      */
 
-    public static MysqlDataSource getMySQLDataSource() {
+    public static MysqlConnectionPoolDataSource getMySQLDataSource() {
 
         Properties props = new Properties();
         FileInputStream fis = null;
-        MysqlDataSource mysqlDS = null;
+        MysqlConnectionPoolDataSource mysqlDS = null;
         try {
             fis = new FileInputStream("db.properties");
             props.load(fis);
-            mysqlDS = new MysqlDataSource();
+            mysqlDS = new MysqlConnectionPoolDataSource();
 
             mysqlDS.setURL(props.getProperty("MYSQL_DB_URL"));
             mysqlDS.setUser(props.getProperty("MYSQL_DB_USERNAME"));
