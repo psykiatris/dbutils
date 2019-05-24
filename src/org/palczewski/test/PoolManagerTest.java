@@ -3,42 +3,70 @@ package org.palczewski.test;
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import org.palczewski.connect.MyDataSourceFactory;
 import org.palczewski.connect.PoolManager;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.testng.Assert.*;
+
 public class PoolManagerTest {
-    /*
-    This test will create multiple datasource objects and put them in
-    the pool.
-     */
-    public static void main(String[] args) {
 
-        // Obtain datasource
-        MysqlConnectionPoolDataSource ds = MyDataSourceFactory.getMySQLDataSource();
-        // create pool with space for 10 connections
-        PoolManager pm = new PoolManager(ds, 5);
+    MysqlConnectionPoolDataSource tds = null;
+    PoolManager pm = null;
 
-        // Add connections
-        try {
-            Connection conn1 = pm.getConnection();
-            Connection conn2 = pm.getConnection();
-            Connection conn3 = pm.getConnection();
-            Connection conn4 = pm.getConnection();
-            /*
-            Will hang if last connection is added.
-            // TODO: 5/23/19 Build mechanism to report if pool is full and refuses new connections.
-             */
-            //Connection conn5 = pm.getConnection();
+    @BeforeMethod
+    public void setUp() {
+        // Get normal connection tp put into pool.
+         tds =
+                MyDataSourceFactory.getMySQLDataSource();
 
+        // Create pool
+        pm = new PoolManager(tds, 5);
+    }
+
+    @Test
+    public void testDispose() {
+    }
+
+    @Test
+    public void testGetConnection() {
+        // Get connection
+        try(Connection conn = pm.getConnection()) {
+
+            if(conn != null) {
+                System.out.println("Successful connection");
+            } else {
+                System.out.println("Connection failed");
+            }
 
         } catch (SQLException e) {
-            System.out.println("Error in connections");
+            System.out.println("Error connecting: " + e.getMessage());
         }
 
-        System.out.println("Active connections: " + pm.getActiveConnections());
-        System.out.println(Thread.currentThread());
-        System.out.println("Valid connections:\n\t" + pm.getValidConnection());
+        System.out.println("\tTesting multiple connections:");
+        try(Connection conn = pm.getConnection()) {
 
+            // Second connection
+            Connection conn2 = pm.getConnection();
+            //Total connections
+            System.out.println("Connections: " + pm.getActiveConnections());
+
+        } catch (SQLException e) {
+            System.out.println("Error making first connection.");
+        }
+    }
+
+    @Test
+    public void testGetValidConnection() {
+    }
+
+    @Test
+    public void testGetActiveConnections() {
+    }
+
+    @Test
+    public void testGetInactiveConnections() {
     }
 }
