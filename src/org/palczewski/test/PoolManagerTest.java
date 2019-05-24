@@ -6,6 +6,7 @@ import org.palczewski.connect.PoolManager;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.sql.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -33,9 +34,9 @@ public class PoolManagerTest {
     @Test
     public void testGetConnection() {
         // Get connection
-        try(Connection conn = pm.getConnection()) {
+        try (Connection conn = pm.getConnection()) {
 
-            if(conn != null) {
+            if (conn != null) {
                 System.out.println("Successful connection");
             } else {
                 System.out.println("Connection failed");
@@ -46,7 +47,7 @@ public class PoolManagerTest {
         }
 
         System.out.println("\tTesting multiple connections:");
-        try(Connection conn = pm.getConnection()) {
+        try (Connection conn = pm.getConnection()) {
 
             // Second connection
             Connection conn2 = pm.getConnection();
@@ -56,9 +57,10 @@ public class PoolManagerTest {
         } catch (SQLException e) {
             System.out.println("Error making first connection.");
         }
+
     }
 
-    @Test
+        @Test
     public void testGetValidConnection() {
     }
 
