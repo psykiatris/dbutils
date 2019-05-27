@@ -50,6 +50,7 @@ Left author's name to give credit
 
  */
 public class MysqlIO {
+
     private static final int UTF8_CHARSET_INDEX = 33;
     private static final String CODE_PAGE_1252 = "Cp1252";
     protected static final int NULL_LENGTH = ~0;
@@ -67,27 +68,38 @@ public class MysqlIO {
 
     /* Found instead of
        affected rows */
-    private static final int CLIENT_LONG_FLAG = 4; /* Get all column flags */
-    private static final int CLIENT_LONG_PASSWORD = 1; /* new more secure
+    /* Get all column flags */
+    private static final int CLIENT_LONG_FLAG = 4;
+    /* new more secure
     passwords */
-    private static final int CLIENT_PROTOCOL_41 = 512; // for > 4.1.1
+    private static final int CLIENT_LONG_PASSWORD = 1;
+    // for > 4.1.1
+    private static final int CLIENT_PROTOCOL_41 = 512;
     private static final int CLIENT_INTERACTIVE = 1024;
     protected static final int CLIENT_SSL = 2048;
-    private static final int CLIENT_TRANSACTIONS = 8192; // Client knows about transactions
-    protected static final int CLIENT_RESERVED = 16384; // for 4.1.0 only
+    // Client knows about transactions
+    private static final int CLIENT_TRANSACTIONS = 8192;
+    // for 4.1.0 only
+    protected static final int CLIENT_RESERVED = 16384;
     protected static final int CLIENT_SECURE_CONNECTION = 32768;
-    private static final int CLIENT_MULTI_QUERIES = 65536; // Enable/disable multiquery support
-    private static final int CLIENT_MULTI_RESULTS = 131072; // Enable/disable multi-results
+    // Enable/disable multiquery support
+    private static final int CLIENT_MULTI_QUERIES = 65536;
+    // Enable/disable multi-results
+    private static final int CLIENT_MULTI_RESULTS = 131072;
     private static final int SERVER_STATUS_IN_TRANS = 1;
-    private static final int SERVER_STATUS_AUTOCOMMIT = 2; // Server in auto_commit mode
-    static final int SERVER_MORE_RESULTS_EXISTS = 8; // Multi query - next query exists
+    // Server in auto_commit mode
+    private static final int SERVER_STATUS_AUTOCOMMIT = 2;
+    // Multi query - next result exists
+    static final int SERVER_MORE_RESULTS_EXISTS = 8;
     private static final int SERVER_QUERY_NO_GOOD_INDEX_USED = 16;
     private static final int SERVER_QUERY_NO_INDEX_USED = 32;
     private static final int SERVER_QUERY_WAS_SLOW = 2048;
     private static final int SERVER_STATUS_CURSOR_EXISTS = 64;
     private static final String FALSE_SCRAMBLE = "xxxxxxxx"; //$NON-NLS-1$
-    protected static final int MAX_QUERY_SIZE_TO_LOG = 1024; // truncate logging of queries at 1K
-    protected static final int MAX_QUERY_SIZE_TO_EXPLAIN = 1024 * 1024; // don't explain queries above 1MB
+    // truncate logging of queries at 1K
+    protected static final int MAX_QUERY_SIZE_TO_LOG = 1024;
+    // don't explain queries above 1MB
+    protected static final int MAX_QUERY_SIZE_TO_EXPLAIN = 1024 * 1024;
     protected static final int INITIAL_PACKET_SIZE = 1024;
     /**
      * We store the platform 'encoding' here, only used to avoid munging
