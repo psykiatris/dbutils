@@ -18,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URL;
+import java.nio.Buffer;
 import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,12 +31,15 @@ import java.util.Properties;
 import java.util.zip.Deflater;
 
 import com.mysql.cj.MysqlConnection;
+import com.mysql.cj.exceptions.ExceptionInterceptor;
 import com.mysql.cj.jdbc.exceptions.MySQLStatementCancelledException;
 import com.mysql.cj.jdbc.exceptions.MySQLTimeoutException;
 import com.mysql.cj.log.ProfilerEvent;
 import com.mysql.cj.log.ProfilerEventHandler;
 import com.mysql.cj.protocol.ReadAheadInputStream;
 import com.mysql.cj.jdbc.util.ResultSetUtil;
+import com.mysql.cj.jdbc.result.ResultSetImpl;
+import com.mysql.cj.protocol.SocketFactory;
 
 
 /**
@@ -160,7 +164,7 @@ public class MysqlIO {
     private Deflater deflater = null;
     protected InputStream mysqlInput = null;
     private LinkedList packetDebugRingBuffer = null;
-    private RowData streamingData = null;
+    //private RowData streamingData = null;
 
     /**
      * The connection to the server
@@ -261,17 +265,19 @@ public class MysqlIO {
      * @throws SQLException if a database access error occurs.
      */
     public MysqlIO(String host, int port, Properties props,
-                   String socketFactoryClassName, MySQLConnection conn,
+                   String socketFactoryClassName, MysqlConnection conn,
                    int socketTimeout, int useBufferRowSizeThreshold) throws IOException, SQLException {
-        this.connection = conn;
+        connection = conn;
 
-        if (this.connection.getEnablePacketDebug()) {
-            this.packetDebugRingBuffer = new LinkedList();
+        // FIXME: 5/27/19 the method below uses MysqlDataSource class.
+        if (connection.getEnablePacketDebug()) {
+            packetDebugRingBuffer = new LinkedList();
         }
-        this.traceProtocol = this.connection.getTraceProtocol();
+        // FIXME: 5/27/19 This method uses MysqlConnectionPoolDataSource
+        traceProtocol = connection.getTraceProtocol();
 
 
-        this.useAutoSlowLog = this.connection.getAutoSlowLog();
+        useAutoSlowLog = this.connection.getAutoSlowLog();
 
         this.useBufferRowSizeThreshold = useBufferRowSizeThreshold;
         this.useDirectRowUnpack = this.connection.getUseDirectRowUnpack();
