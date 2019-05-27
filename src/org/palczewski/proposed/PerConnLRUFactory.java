@@ -10,14 +10,14 @@ import com.mysql.cj.MysqlConnection;
 import com.mysql.cj.ParseInfo;
 import com.mysql.cj.util.LRUCache;
 /*
-Proposed CacheAdapterFactory implementation.
+Proposed CacheAdapterFactory implementation migrated tp Connector/J 8.0.
  */
 public class PerConnLRUFactory implements CacheAdapterFactory<String, ParseInfo> {
 
     public CacheAdapter<String, ParseInfo> getInstance(MysqlConnection forConnection, String url, int cacheMaxSize, int maxKeySize, Properties connectionProperties)
             throws SQLException {
 
-        return new PerConnectionLRU((MysqlConnection) forConnection,
+        return new PerConnectionLRU(forConnection,
                 cacheMaxSize, maxKeySize);
     }
 
