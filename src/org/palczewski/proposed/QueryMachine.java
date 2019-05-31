@@ -17,6 +17,8 @@ public class QueryMachine extends AbstractPreparedQuery {
     NativeSession ns;
 
 
+
+
     public QueryMachine(NativeSession sess) {
         super(sess);
         ns = sess;
