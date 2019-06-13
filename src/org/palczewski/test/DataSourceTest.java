@@ -27,7 +27,7 @@ public class DataSourceTest {
         MysqlConnectionPoolDataSource ds = null;
         PoolManager pm = null;
         if("mysql".equals(dbType)) {
-            ds = MyDataSourceFactory.getMySQLDataSource();
+            ds = MyDataSourceFactory.defaultUser();
             pm = new PoolManager(ds, 10);
         } else {
             System.out.println("No dbType known");

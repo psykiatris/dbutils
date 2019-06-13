@@ -21,7 +21,7 @@ public class PoolManagerTest {
     public void setUp() {
         // Get normal connection tp put into pool.
          tds =
-                MyDataSourceFactory.getMySQLDataSource();
+                MyDataSourceFactory.defaultUser();
 
         // Create pool
         pm = new PoolManager(tds, 5);

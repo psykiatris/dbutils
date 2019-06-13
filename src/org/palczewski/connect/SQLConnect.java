@@ -37,7 +37,7 @@ public class SQLConnect {
 
 
          */
-        ds = MyDataSourceFactory.getMySQLDataSource(user, pw, dbName);
+        ds = MyDataSourceFactory.withUser(user, pw, dbName);
         pm = new PoolManager(ds, 10);
         try {
             conn = pm.getConnection();
@@ -61,7 +61,7 @@ public class SQLConnect {
         app.
          */
         try {
-            ds = MyDataSourceFactory.getMySQLDataSource();
+            ds = MyDataSourceFactory.defaultUser();
             conn = pm.getConnection();
 
 

@@ -1,8 +1,6 @@
 package org.palczewski.connect;
 /*
-A DataSource Factory class to handle connections. First, this DataSource
- is created, then passed to the Poolmanager, and then a connection is
- made.
+Factory method that returns a Connection object based on the method called.
  */
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
@@ -21,7 +19,7 @@ public enum MyDataSourceFactory {
     properties file contains the user required to create other users.
      */
 
-    public static MysqlConnectionPoolDataSource getMySQLDataSource() {
+    public static MysqlConnectionPoolDataSource defaultUser() {
 
         Properties props = new Properties();
         FileInputStream fis = null;
@@ -50,11 +48,11 @@ public enum MyDataSourceFactory {
     }
 
     /*
-    This overloaded method will be used for each user with their own
+    This method will be used for users with their own
     credientials.
      */
 
-    static MysqlConnectionPoolDataSource getMySQLDataSource(String userN,
+    static MysqlConnectionPoolDataSource withUser(String userN,
                                               String userpass,
                                               String dbName) {
 
