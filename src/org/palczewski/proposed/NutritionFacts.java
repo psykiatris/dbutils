@@ -71,10 +71,23 @@ public class NutritionFacts {
     }
 
     public static void main(String[] args) {
+        // test NutrationFacts
 
         NutritionFacts cocaCola =
                 new Builder(240, 8).calories(100).sodium(68).carbohydrates(27).build();
+        System.out.println(cocaCola);
 
     }
 
+    @Override
+    public String toString() {
+        return "NutritionFacts{" +
+                "servingSize=" + servingSize +
+                ", servings=" + servings +
+                ", calories=" + calories +
+                ", fat=" + fat +
+                ", sodium=" + sodium +
+                ", carbohydrates=" + carbohydrates +
+                '}';
+    }
 }
