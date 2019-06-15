@@ -1,6 +1,12 @@
 package org.palczewski.proposed;
 /*
 Learning to create a builder for the class
+
+Taken from Joshua Bloch's "Effective Java". The idea behind this builder
+ class is to create an immutable (unchanging) object, while allowing
+ customized object construction with many optional parameters. So, here,
+  two variables are required, while the rest are optional, allowing the
+  calling program to only set the variables it needs.
  */
 public class NutritionFacts {
 
@@ -68,8 +74,7 @@ public class NutritionFacts {
 
         NutritionFacts cocaCola =
                 new Builder(240, 8).calories(100).sodium(68).carbohydrates(27).build();
-        System.out.println(cocaCola);
-        System.out.println("Fat: " + cocaCola.fat);
+
     }
 
 }
