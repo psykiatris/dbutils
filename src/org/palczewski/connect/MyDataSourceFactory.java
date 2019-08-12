@@ -22,10 +22,9 @@ public enum MyDataSourceFactory {
     public static MysqlConnectionPoolDataSource defaultUser() {
 
         Properties props = new Properties();
-        FileInputStream fis = null;
+
         MysqlConnectionPoolDataSource mysqlDS = null;
-        try {
-            fis = new FileInputStream("db.properties");
+        try (FileInputStream fis = new FileInputStream("db.properties")) {
             props.load(fis);
             mysqlDS = new MysqlConnectionPoolDataSource();
 
@@ -53,13 +52,14 @@ public enum MyDataSourceFactory {
      */
 
     static MysqlConnectionPoolDataSource withUser(String userN,
-                                              String userpass,
+                                              String userP,
                                               String dbName) {
 
         MysqlConnectionPoolDataSource mySqlDS =
                 new MysqlConnectionPoolDataSource();
 
         mySqlDS.setURL("jdbc:mysql://localhost:3306/");
+        // mySqlDS is not autocloseable
         try {
             // set config
 
@@ -70,10 +70,11 @@ public enum MyDataSourceFactory {
             System.out.println("SQL error in factory method: " + e.getMessage());
         }
         mySqlDS.setUser(userN);
-        mySqlDS.setPassword(userpass);
+        mySqlDS.setPassword(userP);
 
 
             return mySqlDS;
+
 
     }
 }

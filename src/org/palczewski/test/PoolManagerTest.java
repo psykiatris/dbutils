@@ -47,10 +47,9 @@ public class PoolManagerTest {
         }
 
         System.out.println("\tTesting multiple connections:");
-        try (Connection conn = pm.getConnection()) {
+        try (Connection conn = pm.getConnection(); Connection conn2 =
+                pm.getConnection()) {
 
-            // Second connection
-            Connection conn2 = pm.getConnection();
             //Total connections
             System.out.println("Connections: " + pm.getActiveConnections());
 
