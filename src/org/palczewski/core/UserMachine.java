@@ -47,16 +47,21 @@ public class UserMachine {
 
     public void grantUser(String dbName, String name) {
         // Will grant named users with privileges.
+        // MUST be root!!
         if(conn != null) {
             try (Statement stmt = conn.createStatement()) {
 
-                String grant = MessageFormat.format("GRANT SELECT, INSERT, UPDATE, DELETE, CREATE REFERENCES ON {0}.* TO {1}", dbName, name);
+                String grant = MessageFormat.format("GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON {0}.* TO {1}", dbName, name);
                 stmt.executeUpdate(grant);
-                stmt.close();
+
                 // Show grants
-                // stmt = conn.createStatement();
                 String qry = MessageFormat.format("SHOW GRANTS FOR {0}", name);
-                try(ResultSet rs = stmt.executeQuery(qry)) {
+                /*
+                Must create another Statement instance once the first
+                one closes. Cannot reopen!
+                 */
+                try(Statement stmt2 = conn.createStatement();ResultSet rs =
+                        stmt2.executeQuery(qry)) {
                     while(rs.next()) {
                         System.out.println(rs.getString(1));
                     }
