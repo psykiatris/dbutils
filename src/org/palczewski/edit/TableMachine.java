@@ -20,8 +20,6 @@ public class TableMachine {
         class. Same idea as DatabaseMachine.
          */
     Connection conn;
-    Statement stmt;
-    PreparedStatement pstmt;
     ResultSetMetaData rsmd;
 
 
@@ -48,16 +46,13 @@ public class TableMachine {
 
          */
         if(conn != null) {
-            try {
-                stmt = conn.createStatement();
+            try (Statement stmt = conn.createStatement()) {
                 String table =
                         MessageFormat.format("CREATE TABLE IF NOT EXISTS {0} (date DATE KEY, first_name CHAR(15), last_name CHAR(15), timestamp TIMESTAMP)", tName);
                 stmt.executeUpdate(table);
-                stmt.close();
                 // Verify that table is created
-                stmt = conn.createStatement();
                 String show = "SHOW TABLES";
-                try(ResultSet rs = stmt.executeQuery(show)) {
+                try(Statement stmt1 = conn.createStatement(); ResultSet rs = stmt1.executeQuery(show)) {
                     while(rs.next()) {
                         if(rs.getString(1) == null) {
                             System.out.println("No tables to list.");
@@ -68,7 +63,7 @@ public class TableMachine {
                         }
                     }
                 }
-                stmt.close();
+
 
             } catch (SQLException e) {
                 System.out.println(MessageFormat.format("SQL error in createTable(): {0}", e.getMessage()));
@@ -84,8 +79,7 @@ public class TableMachine {
          */
         // Check connection
         if(conn != null) {
-            try {
-                stmt = conn.createStatement();
+            try (Statement stmt = conn.createStatement()){
                 String qry = "SELECT * FROM " + tName;
                 try(ResultSet rs = stmt.executeQuery(qry)) {
                     rsmd = rs.getMetaData();
@@ -98,7 +92,7 @@ public class TableMachine {
                     }
                     System.out.println("Number of columns: " + rsmd.getColumnCount());
                 }
-                stmt.close();
+
 
             } catch (SQLException e) {
                 System.out.println("SQL error in getColumns(): " + e.getMessage());
@@ -114,9 +108,9 @@ public class TableMachine {
         Displays a list of tables in a database
          */
         if(conn != null) {
-            try {
+            try (Statement stmt = conn.createStatement()){
 
-                stmt = conn.createStatement();
+
                 String show = "SHOW TABLES";
                 System.out.println("Table List:");
                 try(ResultSet rs = stmt.executeQuery(show)) {
@@ -129,7 +123,7 @@ public class TableMachine {
                     }
 
                 }
-                stmt.close();
+
             } catch (SQLException e) {
                 System.out.println(MessageFormat.format("SQL error in viewTables(): {0}", e.getMessage()));
             }
@@ -148,9 +142,9 @@ public class TableMachine {
          */
         if(conn != null) {
             try(Scanner in = new Scanner(System.in, StandardCharsets.UTF_8)) {
-                try {
-                    String data = "INSERT INTO history (date, first_name, last_name) VALUES (?, ?, ?)";
-                    pstmt = conn.prepareStatement(data);
+                String data = "INSERT INTO history (date, first_name, last_name) VALUES (?, ?, ?)";
+                try (PreparedStatement pstmt = conn.prepareStatement(data)){
+
                     // Get input
                     int count = 1;
                     while(count <= 5) {
@@ -188,8 +182,8 @@ public class TableMachine {
          */
         try {
             if(conn.isValid(120)) {
-                try {
-                    stmt = conn.createStatement();
+                try (Statement stmt = conn.createStatement()){
+
                     String qry = MessageFormat.format("SELECT User, super_priv FROM " +
                             "{0}", tName);
                     try(ResultSet rs = stmt.executeQuery(qry)) {
@@ -226,12 +220,11 @@ public class TableMachine {
         apps should override this method for their own tables, etc.
          */
         if(conn != null) {
-            try {
-                stmt = conn.createStatement();
+            try (Statement stmt = conn.createStatement()){
+
                 String update = MessageFormat.format("UPDATE {0} date = TIMESTAMP", tName);
 
                 stmt.executeUpdate(update);
-                stmt.close();
                 System.out.println("Updated record");
 
             } catch (SQLException e) {
@@ -244,9 +237,9 @@ public class TableMachine {
 
 
     public void statement() {
-        try {
+        try (Statement stmt = conn.createStatement()){
             if(conn.isValid(120)) {
-                stmt = conn.createStatement();
+
                 String sql = "SELECT User FROM mysql.user";
                 try(ResultSet rs = stmt.executeQuery(sql)) {
                     rsmd = rs.getMetaData();
