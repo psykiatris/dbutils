@@ -51,7 +51,7 @@ public enum MyDataSourceFactory {
     credientials.
      */
 
-    static MysqlConnectionPoolDataSource withUser(String userN,
+    public static MysqlConnectionPoolDataSource withUser(String userN,
                                               String userP,
                                               String dbName) {
 

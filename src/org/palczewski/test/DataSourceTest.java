@@ -2,7 +2,6 @@ package org.palczewski.test;
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import org.palczewski.connect.MyDataSourceFactory;
-import org.palczewski.connect.PoolManager;
 
 
 import java.sql.Connection;
@@ -25,10 +24,10 @@ public class DataSourceTest {
     private static void testDataSource(String dbType) {
 
         MysqlConnectionPoolDataSource ds = null;
-        PoolManager pm = null;
+
         if("mysql".equals(dbType)) {
             ds = MyDataSourceFactory.defaultUser();
-            pm = new PoolManager(ds, 10);
+
         } else {
             System.out.println("No dbType known");
         }
@@ -38,7 +37,7 @@ public class DataSourceTest {
         ResultSet rs = null;
 
         try {
-            conn = pm.getConnection();
+            conn = ds.getConnection();
             conn.setCatalog("diabetes");
             stmt = conn.createStatement();
             rs = stmt.executeQuery("select empId, name from Employee");

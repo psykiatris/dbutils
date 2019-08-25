@@ -13,7 +13,6 @@ other applications.
 public class SQLConnect {
 
     MysqlConnectionPoolDataSource ds = null;
-    PoolManager pm = null;
     private static final String DRIVER = "com.mysql.jdbc.Driver";
     private static final String CONNECT = "Connected to server.";
     static Connection conn;
@@ -38,9 +37,9 @@ public class SQLConnect {
 
          */
         ds = MyDataSourceFactory.withUser(user, pw, dbName);
-        pm = new PoolManager(ds, 10);
+
         try {
-            conn = pm.getConnection();
+            conn = ds.getConnection();
             conn.setCatalog(dbName);
 
             System.out.println(CONNECT);
@@ -54,7 +53,7 @@ public class SQLConnect {
 
     // Overload connection for no database
     // For creation of users
-    public Connection doConnect() {
+    public final Connection doConnect() {
         /*
         Creates and returns a connection object based on DataSource to the
         calling
@@ -62,7 +61,7 @@ public class SQLConnect {
          */
         try {
             ds = MyDataSourceFactory.defaultUser();
-            conn = pm.getConnection();
+            conn = ds.getConnection();
 
 
 
@@ -85,7 +84,7 @@ public class SQLConnect {
         }
     }
 
-    final boolean isOpen() {
+    private final boolean isOpen() {
         return conn != null;
     }
 

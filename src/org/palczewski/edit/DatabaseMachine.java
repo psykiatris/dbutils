@@ -18,7 +18,7 @@ public class DatabaseMachine {
 
     String dbName;
     private Connection conn;
-    private Statement stmt;
+
 
     public DatabaseMachine(Connection connection) {
         conn = connection;
@@ -36,12 +36,11 @@ public class DatabaseMachine {
         try {
             if(conn.isValid(120)) {
                 System.out.println(MessageFormat.format("Creating database {0}.", dbName));
-                try {
-                    stmt = conn.createStatement();
+                try (Statement stmt = conn.createStatement()){
+
                     String sql =
                             MessageFormat.format("CREATE DATABASE IF NOT EXISTS {0} CHARACTER SET = utf8", dbName);
                     stmt.executeUpdate(sql);
-                    stmt.close();
                     System.out.println(MessageFormat.format("Database {0} ready for input.", dbName));
                 } catch (SQLException e) {
                     System.out.println("Error creating database " + e.getMessage());
@@ -64,8 +63,8 @@ public class DatabaseMachine {
 
         try {
             if(conn.isValid(120)) {
-                try {
-                    stmt = conn.createStatement();
+                try (Statement stmt = conn.createStatement()){
+
                     String drop = MessageFormat.format("DROP DATABASE IF EXISTS {0}", dbName);
                     stmt.executeUpdate(drop);
                     System.out.println(MessageFormat.format("Removed {0} from mySQL.", dbName));
@@ -91,13 +90,13 @@ public class DatabaseMachine {
                     System.out.println("Currently in " + conn.getCatalog());
                 } else {
                     // Otherwise switch to desired database
-                    try {
-                        stmt = conn.createStatement();
+                    try (Statement stmt = conn.createStatement()){
+
                         String change = MessageFormat.format("USE {0}", name);
                         stmt.executeUpdate(change);
                         dbName = name;
                         System.out.println(MessageFormat.format("Switched to {0}", dbName));
-                        stmt.close();
+
 
                     } catch (SQLException e) {
                         System.out.println("SQL rror in switchDatabase(): " + e.getMessage());
