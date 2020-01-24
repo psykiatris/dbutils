@@ -6,9 +6,9 @@ import com.mysql.cj.jdbc.MysqlDataSource;
 import java.sql.*;
 import java.text.MessageFormat;
 
-/*
-This class will provide the main connection to mySQL. Can be used by
-other applications.
+/**
+ * Provide the main connection to mySQL. Can be used by
+ * other applications.
  */
 public class SQLConnect {
 
@@ -28,7 +28,17 @@ public class SQLConnect {
 
     }
 
-    public Connection doConnect(String user, String pw, String dbName) {
+    /**
+     * Returns a Coonnection
+     * @param user Username
+     * @param pw User's password
+     * @param dbName Database ma,e
+     * @return Connection to mySQL
+     */
+    public final Connection doConnect(String user, String pw, String dbName) {
+        this.user = user;
+        this.pw = pw;
+        this.dbName = dbName;
         /*
         Creates a pooled DataSource object and and returns a
         connection object to
@@ -53,12 +63,13 @@ public class SQLConnect {
 
     // Overload connection for no database
     // For creation of users
+
+    /**
+     * For connections without database name
+     * @return Connection to mySQL
+     */
     public final Connection doConnect() {
-        /*
-        Creates and returns a connection object based on DataSource to the
-        calling
-        app.
-         */
+
         try {
             ds = MyDataSourceFactory.defaultUser();
             conn = ds.getConnection();
@@ -72,6 +83,9 @@ public class SQLConnect {
 
     }
 
+    /**
+     * Closes connection
+     */
     public final void doClose() {
         if(isOpen()) {
             // Shut down
@@ -84,7 +98,11 @@ public class SQLConnect {
         }
     }
 
-    private final boolean isOpen() {
+    /**
+     * Returns status of connection
+     * @return Status
+     */
+    private boolean isOpen() {
         return conn != null;
     }
 

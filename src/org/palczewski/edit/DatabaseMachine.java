@@ -3,33 +3,42 @@ package org.palczewski.edit;
 import java.sql.*;
 import java.text.MessageFormat;
 
-/*
-This class will contain all of the methods to work with databases, such
-as creation, deletion, viewing etc.
-
-This will assume connection is open, and will check via the boolean
-isOpen().
-
-Will be used by application at initialization.
+/**
+ * Database management
+ *
+ * This will assume connection is open, and will check via the boolean
+ * isOpen().
+ *
+ *
  */
 public class DatabaseMachine {
     public static final String NO_CONNECTION = "No connection to server.";
-    public static final String TIMEOUT = "Connection timed out.";
+    static final String TIMEOUT = "Connection timed out.";
 
     String dbName;
     private Connection conn;
 
-
+    /**
+     * DatabaseMachine instance
+     * @param connection Connection to mySQL
+     */
     public DatabaseMachine(Connection connection) {
         conn = connection;
 
     }
 
+    /**
+     * Notify user that connection must be made.
+     */
     public DatabaseMachine() {
         System.out.println("No connection made");
         System.out.println("Usage: DatabaseMachin(<your connection>)");
     }
 
+    /**
+     * Creates database
+     * @param name Database name
+     */
     public final void createDB(String name) {
         dbName = name;
 
@@ -58,6 +67,10 @@ public class DatabaseMachine {
 
     }
 
+    /**
+     * Delete database
+     * @param name Database name
+     */
     public final void removeDatabase(String name) {
         dbName = name;
 
@@ -81,7 +94,10 @@ public class DatabaseMachine {
         }
     }
 
-
+    /**
+     * Switches to another database
+     * @param name Database name
+     */
     public final void switchDatabase(String name) {
 
         try {
@@ -110,10 +126,11 @@ public class DatabaseMachine {
         }
     }
 
+    /**
+     * Displays list of available databases
+     */
     public void viewDatabases() {
-        /*
-        Returns a list of databases available.
-         */
+
         try {
             if(conn.isValid(120)) {
                 try {
@@ -137,10 +154,11 @@ public class DatabaseMachine {
         }
     }
 
+    /**
+     * Displays mySQL version
+     */
     public void getNameVersion() {
-        /*
-        This will return the vesion of mySQL being used.
-         */
+
         try {
             if(conn.isValid(120)) {
                 try {
@@ -160,6 +178,9 @@ public class DatabaseMachine {
         }
     }
 
+    /**
+     * Displays mySQL driver information
+     */
     public void getDriverInfo() {
         try {
             if(conn.isValid(120)) {
@@ -180,6 +201,9 @@ public class DatabaseMachine {
         }
     }
 
+    /**
+     * Displays current user name
+     */
     public void getUserName() {
         try {
             if(conn.isValid(120)) {

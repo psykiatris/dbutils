@@ -1,8 +1,4 @@
 package org.palczewski.core;
-/*
-Methods for user management (creation, deletion, etc.). Root access is
-needed.
- */
 
 import org.palczewski.edit.DatabaseMachine;
 
@@ -12,21 +8,35 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
 
+/**
+ * User management (creation, deletion, etc.). Root access is
+ * required.
+ */
 public class UserMachine {
     Connection conn;
 
-
+    /**
+     * Notifies user that a connection must be made
+     */
     public UserMachine() {
         // Tell user to pass connection
-        System.out.println("Only an instance is created. No connection " +
-                "made.");
+        System.out.println("Only an instance is created. No connection made.");
         System.out.println("Usage: UserMachine(<your connection>)");
     }
 
+    /**
+     * Creates UserMachine instance with connection
+     * @param connection SQL connection
+     */
     public UserMachine(Connection connection) {
         conn = connection;
     }
 
+    /**
+     * Creates user within mySQL
+     * @param name Username
+     * @param pw Password
+     */
     public final void createUser(String name, String pw) {
         // Will create user
         if(conn != null) {
@@ -45,9 +55,14 @@ public class UserMachine {
         }
     }
 
+    /**
+     * Sets user privileges within mySQL
+     *
+     * @param dbName Database name
+     * @param name Username
+     */
     public void grantUser(String dbName, String name) {
-        // Will grant named users with privileges.
-        // MUST be root!!
+
         if(conn != null) {
             try (Statement stmt = conn.createStatement()) {
 
@@ -76,6 +91,11 @@ public class UserMachine {
         }
     }
 
+    /**
+     * Sets user's password within mySQL
+     * @param name Username
+     * @param newPW New password
+     */
     public void setPassword(String name, String newPW) {
         // Allows user to change password
     }

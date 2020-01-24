@@ -1,7 +1,4 @@
 package org.palczewski.connect;
-/*
-Factory method that returns a Connection object based on the method called.
- */
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 
@@ -11,16 +8,21 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
 
+/**
+ * DataSource factory
+ */
 public enum MyDataSourceFactory {
     ;
 
-    /*
-    This method will be used when a new user creates an account, as the
-    properties file contains the user required to create other users.
+    /**
+     * Returns a pooled datasource using properties file
+     * @return Pooled datasource
      */
-
     public static MysqlConnectionPoolDataSource defaultUser() {
 
+        /*
+        Reads from properties file
+         */
         Properties props = new Properties();
 
         MysqlConnectionPoolDataSource mysqlDS = null;
@@ -37,7 +39,7 @@ public enum MyDataSourceFactory {
 
 
         } catch (FileNotFoundException e) {
-            System.out.println("File not found: " + e.getMessage());
+            System.out.printf("File not found: %s%n", e.getMessage());
         } catch (IOException e) {
             System.out.println("IO exception in MyDataSourceFactory(): " + e.getMessage());
         } catch (SQLException e) {
@@ -46,11 +48,13 @@ public enum MyDataSourceFactory {
         return mysqlDS;
     }
 
-    /*
-    This method will be used for users with their own
-    credientials.
+    /**
+     * Returns datasource with credentials
+     * @param userN Username
+     * @param userP Password
+     * @param dbName Database Name
+     * @return Datasource
      */
-
     public static MysqlConnectionPoolDataSource withUser(String userN,
                                               String userP,
                                               String dbName) {

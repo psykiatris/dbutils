@@ -6,6 +6,9 @@ logging system. Work In Progress.
 
 import java.util.logging.Logger;
 
+/**
+ * Process user logins (proposed)
+ */
 public class SqlUserLogin {
 
     private static final Logger logger =

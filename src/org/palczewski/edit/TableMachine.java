@@ -5,46 +5,53 @@ import java.sql.*;
 import java.text.MessageFormat;
 import java.util.Scanner;
 
-/*
-This class contains methods to be used with tables (creation, deletion,
-viewing, inserting and deleting records).
-
-Methods will be built with predefined use (as general as possible), but
-can be overridden by programs utilizing this library.
+/**
+ * Table management tools
+ *
+ *
  */
 public class TableMachine {
 
     public static final String NOTHING_TO_SHOW = "Nothing to show";
     /*
-        Other apps can pass their connection objects to use methods in this
-        class. Same idea as DatabaseMachine.
+        Pass cononection to use methods
          */
     Connection conn;
     ResultSetMetaData rsmd;
 
 
+    /**
+     * Creates TableMachine instance
+     * @param conn Connection
+     */
     public TableMachine(Connection conn) {
         this.conn = conn;
     }
 
+    /**
+     * When no connection is passed
+     */
     public TableMachine() {
         System.out.println("No connection established");
         System.out.println("Usage: TableMachine(<your connection>");
     }
 
+    /**
+     * Creates empty table. Can be overridden. Use mySQL syntax to
+     * create table with its name and params
+     */
     public void createTable() {
-        // Allow classses extending this class to customize their own
-        // table.
+
 
     }
 
+    /**
+     * Creates a default table
+     * Table fields: date, last name, first name
+     * @param tName Table name
+     */
     public void createTable(String tName) {
-        /*
-        Defines default table wit columns (date, lname, fname).
-        Your application should override this method with its own table
-        definition.
 
-         */
         if(conn != null) {
             try (Statement stmt = conn.createStatement()) {
                 String table =
@@ -73,6 +80,10 @@ public class TableMachine {
         }
     }
 
+    /**
+     * Displays columns of table
+     * @param tName Table name
+     */
     public void getColumns(String tName) {
         /*
         Return a list of column names for a table.
@@ -103,10 +114,11 @@ public class TableMachine {
 
     }
 
+    /**
+     * Display list of available tables for current user
+     */
     public void viewTables() {
-        /*
-        Displays a list of tables in a database
-         */
+
         if(conn != null) {
             try (Statement stmt = conn.createStatement()){
 
@@ -129,12 +141,16 @@ public class TableMachine {
             }
         }
     }
+    // TODO: 1/23/20 I can leave the Scanner open and pass to this instance to solve this problem
     /*
     In the method below, it should open a new Scanner and read input.
     However, when run, it throws an exception saying "line not found."
     as if the System.in is closed, though I opened it explicitly.
      */
 
+    /**
+     * Allows user to type input to table
+     */
     public void insertRecord() {
         /*
         Must override with app's specific definitions, etc.
@@ -176,10 +192,12 @@ public class TableMachine {
         }
     }
 
+    /**
+     * Displays records in a talbe
+     * @param tName Table name
+     */
     public void viewRecords(String tName) {
-        /*
-        Will display records from table
-         */
+
         try {
             if(conn.isValid(120)) {
                 try (Statement stmt = conn.createStatement()){
@@ -214,6 +232,10 @@ public class TableMachine {
         }
     }
 
+    /**
+     * Updates existing records
+     * @param tName Table name
+     */
     public void updateRecord(String tName) {
         /*
         This will update one row in the default template table. other
@@ -236,6 +258,10 @@ public class TableMachine {
     }
 
 
+    /**
+     * // TODO: 1/23/20 Rename function as it displays a list of users
+     * Displays a list of users
+     */
     public void statement() {
         try (Statement stmt = conn.createStatement()){
             if(conn.isValid(120)) {
