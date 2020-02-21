@@ -62,7 +62,7 @@ public enum MyDataSourceFactory {
         MysqlConnectionPoolDataSource mySqlDS =
                 new MysqlConnectionPoolDataSource();
 
-        mySqlDS.setURL("jdbc:mysql://localhost:3306/");
+        mySqlDS.setURL("jdbc:mysql://localhost:3306/?allowPublicKeyRetrieval=true");
         // mySqlDS is not autocloseable
         try {
             // set config
