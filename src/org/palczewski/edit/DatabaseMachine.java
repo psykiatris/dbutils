@@ -204,7 +204,7 @@ public class DatabaseMachine {
     /**
      * Displays current user name
      */
-    public void getUserName() {
+    public final void getUserName() {
         try {
             if(conn.isValid(120)) {
                 try {

@@ -42,7 +42,7 @@ public class UserMachine {
         if(conn != null) {
             try (Statement stmt = conn.createStatement()){
 
-                String qry = MessageFormat.format("CREATE USER IF NOT EXISTS {0} IDENTIFIED BY \"{1}\" WITH MAX_USER_CONNECTIONS 1 PASSWORD EXPIRE INTERVAL 90 DAY", name, pw);
+                String qry = MessageFormat.format("CREATE USER IF NOT EXISTS {0}@'localhost' IDENTIFIED BY \"{1}\" WITH alterMAX_USER_CONNECTIONS 1 PASSWORD EXPIRE INTERVAL 90 DAY", name, pw);
                 stmt.executeUpdate(qry);
                 System.out.println(MessageFormat.format("Successfully created a mySQL account for {0}.", name));
 
@@ -61,7 +61,7 @@ public class UserMachine {
      * @param dbName Database name
      * @param name Username
      */
-    public void grantUser(String dbName, String name) {
+    public final void grantUser(String dbName, String name) {
 
         if(conn != null) {
             try (Statement stmt = conn.createStatement()) {
