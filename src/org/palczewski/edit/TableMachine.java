@@ -12,7 +12,7 @@ import java.util.Scanner;
  */
 public class TableMachine {
 
-    public static final String NOTHING_TO_SHOW = "Nothing to show";
+    private static final String NOTHING_TO_SHOW = "Nothing to show";
     /*
         Pass cononection to use methods
          */
@@ -41,6 +41,8 @@ public class TableMachine {
      * create table with its name and params
      */
     public void createTable() {
+        // Allow sub-class to override
+        // with their custom creation
 
 
     }
